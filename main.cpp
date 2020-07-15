@@ -86,7 +86,7 @@ Mat matrcv(int src){
 
 int main( int argc, char** argv )
 {
-	int mi_rango; /* rango del proceso    */
+    int mi_rango; /* rango del proceso    */
     int procesadores; /* numero de procesos   */
     int maestro = 0; /* Identificador maestro */
     MPI_Status estado; /* devuelve estado al recibir*/
@@ -110,10 +110,10 @@ int main( int argc, char** argv )
     */
     MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
 	
-	if (procesadores < 2) {
+    if (procesadores < 2) {
             fprintf(stderr, "\nLa implementación requiere al menos 2 procesadores\n");
             return EXIT_FAILURE;
-        }
+    }
 		
     std::string opcion(argv[1]);
     std::cout << opcion << std::endl;
@@ -127,7 +127,7 @@ int main( int argc, char** argv )
 	   if(mi_rango==0){
 		   Mat received=matrcv(1);
 		   char temporalUno[13];
-           std::string NombreUno = "operacion_1_"+convertirEnString(tiempoActual(temporalUno), 14)+".png";
+                   std::string NombreUno = "operacion_1_"+convertirEnString(tiempoActual(temporalUno), 14)+".png";
 		   imwrite("NombreUno",received);
 		   received.release();
 		   return 0;
@@ -135,12 +135,12 @@ int main( int argc, char** argv )
 		   std::string ruta(argv[2]);
 		   cv::Mat imagenOriginal = imread(ruta);
 		   if (!imagenOriginal.data) {
-               return EXIT_FAILURE;
+                        return EXIT_FAILURE;
            }
-		   cv::Mat imagenDifuminada;
+           cv::Mat imagenDifuminada;
            cv::GaussianBlur(imagenOriginal, imagenDifuminada, cv::Size(3, 3), 0);
            imagenOriginal.release();
-		   matsnd(imagenDifuminada,0);
+           matsnd(imagenDifuminada,0);
 	   }
     }
 
@@ -164,5 +164,5 @@ int main( int argc, char** argv )
         imagenEscalada.release();
         return 0;
     }
-    return 0;
+    return 1;
 }
