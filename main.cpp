@@ -1,168 +1,335 @@
 #include <iostream>
-#include <opencv2/opencv.hpp>
-#include <ctime>
-#include <stdio.h>
-#include "mpi.h"
-#include <thread>
 #include <cstdlib>
-#include <chrono>
+#include <opencv4/opencv2/opencv_modules.hpp>
+#include <opencv4/opencv2/photo.hpp>
+#include <opencv4/opencv2/opencv.hpp>
+#include <opencv4/opencv2/core/core.hpp>
+#include <opencv4/opencv2/core.hpp>
+#include <mpi.h>
+#include <string>
+#include <vector>
+#include <ctime>
+#include <cmath>
 
 using namespace cv;
 using namespace std;
+int rangeMin, rangeMax;
+/** Funciones **/
 
-char* tiempoActual(char* buffer){
-    std::time_t datos;
-    std::tm* info;
-    std::time(&datos);
-    info = std::localtime(&datos);
-
-    std::strftime(buffer,80,"%Y%m%d%H%M%S",info);
-
-    return buffer;
+/*
+ * lineal_extrapolation: Funcion para realizar extrapolacion lineal
+ * Parametros:
+     -k1: Valor del punto actual
+     -k0: valor del punto anterior al actual el K(n-1)
+     -divi: Valor de la division por formula de k1 y k0 (buscar punto)
+*/
+float linear_extrapolation(float k1, float k0, float divi){
+    return k1+(k0-k1)*divi;
 }
 
-std::string convertirEnString(char* arreglo, int largo){ 
-    string texto = ""; 
-    for (int i = 0; i < largo; i++) { 
-        texto = texto + arreglo[i]; 
-    } 
-    return texto;
+/*
+ * bi_linear_extrapolation: Funcion encargada de realizar extrapolacion bilinear, mediante 2 extrapolaciones lineales
+ *Parametros:
+     -a: Punto x1
+     -b: Punto y1
+     -c: Punto x2
+     -d: Punto y2
+     -x: Valor division para Punto 1
+     -y: Valor division para Punto 2
+*/
+float bi_linear_extrapolation(float a, float b, float c, float d, float x, float y){
+    return linear_extrapolation(linear_extrapolation(a, b, x), linear_extrapolation(c, d, x), y);
 }
 
-int convertirStringEnEntero(std::string linea){
-    try{
-        int entero = stoi(linea);
-        return entero;
+/*
+ * Generar_mascara: Funcion encargada de preparar los valores internos de la mascara a utilizar en el difuminado a utilizar.
+
+ * Parametros:
+       -Base: Matriz bidimensional flotante la cual es utilizada como mascara para difuminado en otra funcion.
+*/
+void Generar_mascara(float base[5][5]){
+    for(int i = 0; i<5; i++){
+        for(int j = 0; j<5; j++){
+            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(1.5,2))));
+            base[i][j]=expo/(2*3.1416*pow(1.5,2));
+        }
     }
-    catch(std::invalid_argument const &e){
-        std::cout << "Argumento inválido" << std::endl;
-        return 666;
+}
+
+/*
+*/
+void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int min_y, int max_x, int max_y){
+    for(int x=0; x<max_x-min_x; x++){
+        for(int y=0; y<max_y-min_y; y++){
+            pedazo_recortado.at<Vec3b>(y,x)[0]=imagen_original.at<Vec3b>(y,x+min_x)[0];
+            pedazo_recortado.at<Vec3b>(y,x)[1]=imagen_original.at<Vec3b>(y,x+min_x)[1];
+            pedazo_recortado.at<Vec3b>(y,x)[2]=imagen_original.at<Vec3b>(y,x+min_x)[2];
+        }
     }
 }
 
-void matsnd(const Mat& m,int dest){
-      int rows  = m.rows;
-      int cols  = m.cols;
-      int type  = m.type();
-      int channels = m.channels();
-      memcpy(&buffer[0 * sizeof(int)],(uchar*)&rows,sizeof(int));
-      memcpy(&buffer[1 * sizeof(int)],(uchar*)&cols,sizeof(int));
-      memcpy(&buffer[2 * sizeof(int)],(uchar*)&type,sizeof(int));
-	  cout << "matsnd: filas=" << rows << endl;
-      cout << "matsnd: columnas=" << cols << endl;
-      cout << "matsnd: type=" << type << endl;
-      cout << "matsnd: channels=" << channels << endl;
-      cout << "matsnd: bytes=" << bytes << endl;
-
-      int bytespersample=1;
-      int bytes=m.rows*m.cols*channels*bytespersample;
-	  
-      if(!m.isContinuous())
-      { 
-         m = m.clone();
-      }
-      memcpy(&buffer[3*sizeof(int)],m.data,bytes);
-      MPI_Send(&buffer,bytes+3*sizeof(int),MPI_UNSIGNED_CHAR,dest,0,MPI_COMM_WORLD);
-}
-
-Mat matrcv(int src){
-      MPI_Status status;
-      int count,rows,cols,type,channels;
-
-      MPI_Recv(&buffer,sizeof(buffer),MPI_UNSIGNED_CHAR,src,0,MPI_COMM_WORLD,&status);
-      MPI_Get_count(&status,MPI_UNSIGNED_CHAR,&count);
-      memcpy((uchar*)&rows,&buffer[0 * sizeof(int)], sizeof(int));
-      memcpy((uchar*)&cols,&buffer[1 * sizeof(int)], sizeof(int));
-      memcpy((uchar*)&type,&buffer[2 * sizeof(int)], sizeof(int));
-
-      cout << "matrcv: Count=" << count << endl;
-      cout << "matrcv: filas=" << rows << endl;
-      cout << "matrcv: columnas=" << cols << endl;
-      cout << "matrcv: type=" << type << endl;
-
-      Mat received= Mat(rows,cols,type,(uchar*)&buffer[3*sizeof(int)]);
-      return received;
-}
-
-int main( int argc, char** argv )
-{
-    int mi_rango; /* rango del proceso    */
-    int procesadores; /* numero de procesos   */
-    int maestro = 0; /* Identificador maestro */
-    MPI_Status estado; /* devuelve estado al recibir*/
-	
-	/* Este string se usara para detener los hilos paralelos */
-    std::string parar("STOP");
-	
-    if(argc!=3){
-        std::cout << "No se han entregado los argumentos necesarios. Se cerrará el programa" << std::endl;
-        return EXIT_FAILURE;
+/*
+*/
+void join_gaussian_blur(Mat src, Mat dst,int proceso, int procesadores);
+void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores){
+    int espaciado=(new_image.cols/procesadores)*proceso;
+    int inicio=0, fin=0;
+    if(proceso!=0){
+        inicio=2;
     }
-        
-	/* Comienza las llamadas a MPI */
-    MPI_Init(&argc, &argv);
+    if(proceso==procesadores-1){
+        fin=-2;
+    }
+    for(int x=0; x<Original_image.cols+fin; x++){
+        for(int y=0; y<Original_image.rows; y++){
+            new_image.at<Vec3b>(y,espaciado+x)[0]=Original_image.at<Vec3b>(y,x+inicio)[0];
+            new_image.at<Vec3b>(y,espaciado+x)[1]=Original_image.at<Vec3b>(y,x+inicio)[1];
+            new_image.at<Vec3b>(y,espaciado+x)[2]=Original_image.at<Vec3b>(y,x+inicio)[2];
+        }
+    }
+}
 
-    /* Averiguamos el rango de nuestro proceso */
-    MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
+/*
+*/
+void join_luminosity_scale(Mat src, Mat dst,int proceso, int procesadores);
+void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int procesadores){
+    int espaciado=(new_image.cols/procesadores)*proceso;
+    for(int x=0; x<Original_image.cols; x++){
+        for(int y=0; y<Original_image.rows; y++){
+            new_image.at<Vec3b>(y,espaciado+x)[0]=Original_image.at<Vec3b>(y,x)[0];
+            new_image.at<Vec3b>(y,espaciado+x)[1]=Original_image.at<Vec3b>(y,x)[1];
+            new_image.at<Vec3b>(y,espaciado+x)[2]=Original_image.at<Vec3b>(y,x)[2];
+        }
+    }
+}
 
-    /* Averiguamos el número de procesos que estan 
-    * ejecutando nuestro porgrama 
-    */
-    MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
-	
-    if (procesadores < 2) {
-            fprintf(stderr, "\nLa implementación requiere al menos 2 procesadores\n");
+/*
+*/
+void enviar(Mat imagen, int destinatario){
+    size_t total, elemsize;
+    int sizes[3];
+    sizes[2] = imagen.elemSize();
+    Size s = imagen.size();
+    sizes[0] = s.height;
+    sizes[1] = s.width;
+    MPI_Send( sizes, 3, MPI_INT,destinatario,0,MPI_COMM_WORLD);
+    MPI_Send( imagen.data, sizes[0]*sizes[1]*3, MPI_CHAR,destinatario,1, MPI_COMM_WORLD);
+}
+
+/*
+*/
+void recibir(Mat &fragmento,int remitente){
+    MPI_Status estado;
+    size_t total, elemsize;
+    int sizes[3];
+    MPI_Recv( sizes,3, MPI_INT,remitente,0, MPI_COMM_WORLD, &estado);
+    fragmento.create(sizes[0], sizes[1], CV_8UC3);
+    MPI_Recv( fragmento.data, sizes[0] * sizes[1] * 3, MPI_CHAR, remitente, 1, MPI_COMM_WORLD, &estado);
+}
+
+/*
+ * Gaussian_blur: Algoritmo para difuminar una imagen; se basa en el metodo de difuminado gausiano, el cual utiliza una mascara sobre
+   el area a difuminar para asi reducir el error relativo en los pixeles (se reduce la prob. de pixeles mal difuminados y problemas
+   de iluminacion en la imagen)
+
+ * Parametros:
+       -Original_image: Imagen original, la cual a de ser convertida a escala de grises
+       -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
+       -max_x: Cantidad total de columnas (casillas en el eje X)
+       -max_y Cantidad total de filas (casilas en el eje Y)
+*/
+void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
+    float mascara[5][5]; ///Mascara flotante a utilizar
+    Generar_mascara(mascara);
+    for(int x=0; x<max_x; x++)
+    {
+        for(int y=0; y<max_y; y++)
+        {
+            for(int color=0; color<3; color++)
+            {
+                float sumador = 0;
+                for(int xm=-2; xm<3; xm++)
+                {
+                    for(int ym=-2; ym<3; ym++)
+                    {
+                        if(xm+x>=0 && xm+x<max_x)
+                        {
+                            if(ym+y>=0 && ym+y<max_y)
+                            {
+                                sumador+=Original_image.at<Vec3b>(y+ym,x+xm)[color]*mascara[ym+2][xm+2];
+                            }
+                            else
+                            {
+                                sumador+=Original_image.at<Vec3b>(y,x+xm)[color]*mascara[ym+2][xm+2];
+                            }
+                        }
+                        else
+                        {
+                            if(ky+y>=0 && ky+y<max_y)
+                            {
+                                sumador+=Original_image.at<Vec3b>(y+ym,x)[color]*mascara[ym+2][xm+2];
+                            }
+                            else
+                            {
+                                sumador+=Original_image.at<Vec3b>(y,x)[color]*mascara[ym+2][xm+2];
+                            }
+                        }
+                    }
+                }
+                gray_image.at<Vec3b>(y,x)[color]=sumador;
+            }
+        }
+    }
+}
+
+/*
+ * Luminosity: Algoritmo para convertir imagenes de color a grises; se basa en convertir el respectivo color (RGB) segun el espectro de vision humana.
+   Este se expresa con que: Rojo(R)*0.21 | Verde(G)*0.71 | Azul(B)*0.07
+
+ * Parametros:
+       -Original_image: Imagen original, la cual a de ser convertida a escala de grises
+       -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
+       -max_x: Cantidad total de columnas (casillas en el eje X)
+       -max_y Cantidad total de filas (casilas en el eje Y)
+*/
+void Luminosity(Mat Original_image, Mat gray_image, int max_x, int max_y){
+    for(int x = 0; x < max_x; x++)
+    {
+        for(int y = 0; y < max_y; y++)
+        {
+            gray_image.at<Vec3b>(y,x)[0]=Original_image.at<Vec3b>(y,x)[0]*(0.21);
+            gray_image.at<Vec3b>(y,x)[1]=Original_image.at<Vec3b>(y,x)[1]*(0.71);
+            gray_image.at<Vec3b>(y,x)[2]=Original_image.at<Vec3b>(y,x)[2]*(0.07);
+        }
+    }
+}
+
+*/
+Mat bi_lineal_scale(Mat imagen_original, float aumento){
+    int newcols = imagen_original.cols*aumento;
+    int newrows = imagen_original.rows*aumento;
+    Mat nueva_imagen(newrows, newcols, CV_8UC3);
+    for(int x = 0; x < newcols; x++){
+        for(int y = 0; y < newrows; y++){
+            float gx = ((float)(x) / newcols) * (imagen_original.cols - 1);
+            float gy = ((float)(y) / newrows) * (imagen_original.rows - 1);
+
+            int gxi = (int) gx;
+            int gyi = (int) gy;
+            int red = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[0], imagen_original.at<Vec3b>(gyi + 1, gxi)[0], imagen_original.at<Vec3b>(gyi, gxi + 1)[0], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[0], gx - gxi, gy - gyi);
+            int green = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[1], imagen_original.at<Vec3b>(gyi + 1, gxi)[1], imagen_original.at<Vec3b>(gyi, gxi + 1)[1], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[1], gx - gxi, gy - gyi);
+            int blue = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[2], imagen_original.at<Vec3b>(gyi + 1, gxi)[2], imagen_original.at<Vec3b>(gyi, gxi + 1)[2], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[2], gx - gxi, gy - gyi);
+
+            nueva_imagen.at<Vec3b>(y, x)[0] = red;
+            nueva_imagen.at<Vec3b>(y, x)[1] = green;
+            nueva_imagen.at<Vec3b>(y, x)[2] = blue;
+        }
+    }
+    return nueva_imagen;
+}
+
+int main(int argc, char** argv ){
+    if(argc > 2){
+        int mi_rango, procesadores;
+        Mat img, fragmento;
+
+        MPI_Init(&argc, &argv);
+        MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
+        MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
+
+        string option(argv[1]);
+
+        if(mi_rango==0){
+            string path=argv[2];
+            imagen_original=imread(path, 1);
+
+            int diferencia=(imagen_original.cols/procesadores), agregado=0;
+            if(option=="1" || option=="2")
+            {
+                agregado=2;
+            }
+            int mintemp=0, maxtemp=diferencia;
+
+            Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type());
+            fragmento = tmpfragmento.clone();
+            copyTo(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
+
+            for(int p=1; p<procesadores; p++){
+                mintemp=(diferencia*p)-agregado;
+                maxtemp=(diferencia*(p+1))+agregado;
+                if((p+1)==procesadores){
+                    maxtemp=imagen_original.cols;
+                }
+                int diference=maxtemp-mintemp;
+                Mat imgToSend(Size(diference, imagen_original.rows), imagen_original.type());
+                obtener_fragmento(imagen_original, imgToSend, mintemp, 0, maxtemp, imagen_original.rows);
+                sendMsg(imgToSend, p);
+            }
+        }
+        else{
+            recvMsg(fragmento,0);
+        }
+        Mat newimg = fragmento.clone();
+        if(option=="1")
+        {
+            Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
+            if(mi_rango == 0){
+                join_luminosity_scale(newimg, imagen_original, 0, procesadores);
+                for(int p = 1; p < procesadores; p++){
+                    Mat imgtmpjoin;
+                    recvMsg(imgtmpjoin, p);
+                    join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                }
+            }
+            else{
+                sendMsg(newimg, 0);
+            }
+        }
+        if(option == "2")
+        {
+            Luminosity(fragmento, newimg, fragmento.cols, fragmento.rows);
+            if(mi_rango == 0){
+                join_luminosity_scale(newimg, imagen_original, 0, procesadores);
+                for(int p = 1; p < procesadores; p++){
+                    Mat imgtmpjoin;
+                    recvMsg(imgtmpjoin, p);
+                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                }
+            }
+            else{
+                sendMsg(newimg, 0);
+            }
+        }
+        if(option == "3"){
+            Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+            if(mi_rango == 0){
+                Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
+                for(int p = 1; p < procesadores; p++){
+                    Mat imgtmpjoin;
+                    recvMsg(imgtmpjoin, p);
+                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
+                }
+            }
+            else{
+                sendMsg(tmpnewimg, 0);
+            }
+        }
+        if(option!="1" && option!="2" && option!="3"){
+            cout<<"La opcion ingresada no es valida..."<<endl;
             return EXIT_FAILURE;
+        }
+        MPI_Finalize();
     }
-		
-    std::string opcion(argv[1]);
-    std::cout << opcion << std::endl;
-    int numero = convertirStringEnEntero(opcion);
-
-    if(numero==666){
+    else{
+        cout<<"No se ingresaron lo argumentos <opcion> <filepath>..."<<endl;
         return EXIT_FAILURE;
     }
-    
-    if(numero==1){
-	   if(mi_rango==0){
-		   Mat received=matrcv(1);
-		   char temporalUno[13];
-                   std::string NombreUno = "operacion_1_"+convertirEnString(tiempoActual(temporalUno), 14)+".png";
-		   imwrite("NombreUno",received);
-		   received.release();
-		   return 0;
-	   } else {
-		   std::string ruta(argv[2]);
-		   cv::Mat imagenOriginal = imread(ruta);
-		   if (!imagenOriginal.data) {
-                        return EXIT_FAILURE;
-           }
-           cv::Mat imagenDifuminada;
-           cv::GaussianBlur(imagenOriginal, imagenDifuminada, cv::Size(3, 3), 0);
-           imagenOriginal.release();
-           matsnd(imagenDifuminada,0);
-	   }
-    }
-
-    if(numero==2){
-        cv::Mat imagenGris;
-        cv::cvtColor(imagenOriginal, imagenGris, COLOR_BGR2GRAY);
-        imagenOriginal.release();
-        char temporalDos[13];
-        std::string NombreDos = "operacion_2_"+convertirEnString(tiempoActual(temporalDos), 14)+".png";
-        imwrite(NombreDos, imagenGris);
-        imagenGris.release();
-        return 0;
-    }
-    if(numero==3){
-        cv::Mat imagenEscalada;
-        cv::resize(imagenOriginal, imagenEscalada, cv::Size(), 1.5, 1.5);
-        imagenOriginal.release();
-        char temporalTres[13];
-        std::string NombreTres = "operacion_3_"+convertirEnString(tiempoActual(temporalTres), 14)+".png";
-        imwrite(NombreTres, imagenEscalada);
-        imagenEscalada.release();
-        return 0;
-    }
-    return 1;
+    time_t now=time(0);
+    struct tm tstruct;
+    char buf[80];
+    tstruct= *localtime(&now);
+    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
+    imwrite("/media/compartida/programa_"+option+"_"+string(buf)+".png", image);
+    return EXIT_SUCCESS;
 }
