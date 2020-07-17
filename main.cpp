@@ -70,7 +70,6 @@ void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int
 
 /*
 */
-void join_gaussian_blur(Mat src, Mat dst,int proceso, int procesadores);
 void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores){
     int espaciado=(new_image.cols/procesadores)*proceso;
     int inicio=0, fin=0;
@@ -91,7 +90,6 @@ void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int proc
 
 /*
 */
-void join_luminosity_scale(Mat src, Mat dst,int proceso, int procesadores);
 void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int procesadores){
     int espaciado=(new_image.cols/procesadores)*proceso;
     for(int x=0; x<Original_image.cols; x++){
@@ -165,7 +163,7 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
                         }
                         else
                         {
-                            if(ky+y>=0 && ky+y<max_y)
+                            if(ym+y>=0 && ym+y<max_y)
                             {
                                 sumador+=Original_image.at<Vec3b>(y+ym,x)[color]*mascara[ym+2][xm+2];
                             }
@@ -232,7 +230,7 @@ int main(int argc, char** argv ){
     string option(argv[1]);
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento;
+        Mat img, fragmento, imagen_original, new;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
@@ -240,7 +238,7 @@ int main(int argc, char** argv ){
 
         if(mi_rango==0){
             string path(argv[2]);
-            cv::Mat imagen_original=imread(path, 1);
+            imagen_original=imread(path, 1);
 
             int diferencia=(imagen_original.cols/procesadores);
             int agregado=0;
@@ -252,7 +250,7 @@ int main(int argc, char** argv ){
 
             Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type());
             fragmento = tmpfragmento.clone();
-            copyTo(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
+            obtener_fragmento(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
 
             for(int p=1; p<procesadores; p++){
                 mintemp=(diferencia*p)-agregado;
@@ -330,6 +328,6 @@ int main(int argc, char** argv ){
     char buf[80];
     tstruct= *localtime(&now);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
-    imwrite("/media/compartida/programa_"+option+"_"+string(buf)+".png", image);
+    imwrite("/media/compartida/programa_"+option+"_"+string(buf)+".png", newimg);
     return EXIT_SUCCESS;
 }
