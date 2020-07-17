@@ -204,8 +204,8 @@ void Luminosity(Mat Original_image, Mat gray_image, int max_x, int max_y){
     }
 }
 
-*/
-Mat bi_lineal_scale(Mat imagen_original, float aumento){
+
+cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
     int newcols = imagen_original.cols*aumento;
     int newrows = imagen_original.rows*aumento;
     Mat nueva_imagen(newrows, newcols, CV_8UC3);
@@ -229,6 +229,7 @@ Mat bi_lineal_scale(Mat imagen_original, float aumento){
 }
 
 int main(int argc, char** argv ){
+    string option(argv[1]);
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento;
@@ -237,13 +238,12 @@ int main(int argc, char** argv ){
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
         MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
 
-        string option(argv[1]);
-
         if(mi_rango==0){
-            string path=argv[2];
-            imagen_original=imread(path, 1);
+            string path(argv[2]);
+            cv::Mat imagen_original=imread(path, 1);
 
-            int diferencia=(imagen_original.cols/procesadores), agregado=0;
+            int diferencia=(imagen_original.cols/procesadores);
+            int agregado=0;
             if(option=="1" || option=="2")
             {
                 agregado=2;
@@ -263,11 +263,11 @@ int main(int argc, char** argv ){
                 int diference=maxtemp-mintemp;
                 Mat imgToSend(Size(diference, imagen_original.rows), imagen_original.type());
                 obtener_fragmento(imagen_original, imgToSend, mintemp, 0, maxtemp, imagen_original.rows);
-                sendMsg(imgToSend, p);
+                enviar(imgToSend, p);
             }
         }
         else{
-            recvMsg(fragmento,0);
+            recibir(fragmento,0);
         }
         Mat newimg = fragmento.clone();
         if(option=="1")
@@ -277,12 +277,12 @@ int main(int argc, char** argv ){
                 join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
-                    recvMsg(imgtmpjoin, p);
+                    recibir(imgtmpjoin, p);
                     join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
                 }
             }
             else{
-                sendMsg(newimg, 0);
+                enviar(newimg, 0);
             }
         }
         if(option == "2")
@@ -292,12 +292,12 @@ int main(int argc, char** argv ){
                 join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
-                    recvMsg(imgtmpjoin, p);
+                    recibir(imgtmpjoin, p);
                     join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
                 }
             }
             else{
-                sendMsg(newimg, 0);
+                enviar(newimg, 0);
             }
         }
         if(option == "3"){
@@ -307,12 +307,12 @@ int main(int argc, char** argv ){
                 join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
-                    recvMsg(imgtmpjoin, p);
+                    recibir(imgtmpjoin, p);
                     join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                 }
             }
             else{
-                sendMsg(tmpnewimg, 0);
+                enviar(tmpnewimg, 0);
             }
         }
         if(option!="1" && option!="2" && option!="3"){
