@@ -288,7 +288,7 @@ int main(int argc, char** argv ){
         }
         if(option == "2")
         {
-            Luminosity(fragmento, newimg, fragmento.cols, fragmento.rows);
+            Average(fragmento, newimg, fragmento.cols, fragmento.rows);
             if(mi_rango == 0){
                 join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
@@ -305,6 +305,7 @@ int main(int argc, char** argv ){
             Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
             if(mi_rango == 0){
                 Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                cout<<newimg.col<<newimg.rows<<endl;
                 join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
