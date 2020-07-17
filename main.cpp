@@ -228,9 +228,10 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 
 int main(int argc, char** argv ){
     string option(argv[1]);
+    Mat newimg;
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento, imagen_original, new;
+        Mat img, fragmento, imagen_original;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
@@ -267,7 +268,7 @@ int main(int argc, char** argv ){
         else{
             recibir(fragmento,0);
         }
-        Mat newimg = fragmento.clone();
+        newimg = fragmento.clone();
         if(option=="1")
         {
             Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
@@ -328,6 +329,6 @@ int main(int argc, char** argv ){
     char buf[80];
     tstruct= *localtime(&now);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
-    imwrite("/media/compartida/programa_"+option+"_"+string(buf)+".png", newimg);
+    imwrite(option+"_"+string(buf)+".png", newimg);
     return EXIT_SUCCESS;
 }
