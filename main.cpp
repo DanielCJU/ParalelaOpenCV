@@ -181,7 +181,7 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
 }
 
 /*
- * Luminosity: Algoritmo para convertir imagenes de color a grises; se basa en convertir el respectivo color (RGB) segun el espectro de vision humana.
+ * Average: Algoritmo para convertir imagenes de color a grises; se basa en convertir el respectivo color (RGB) segun el espectro de vision humana.
    Este se expresa con que: Rojo(R)*0.21 | Verde(G)*0.71 | Azul(B)*0.07
 
  * Parametros:
@@ -190,14 +190,16 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
        -max_x: Cantidad total de columnas (casillas en el eje X)
        -max_y Cantidad total de filas (casilas en el eje Y)
 */
-void Luminosity(Mat Original_image, Mat gray_image, int max_x, int max_y){
+void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
+    float promedio;
     for(int x = 0; x < max_x; x++)
     {
         for(int y = 0; y < max_y; y++)
         {
-            gray_image.at<Vec3b>(y,x)[0]=Original_image.at<Vec3b>(y,x)[0]*(0.21);
-            gray_image.at<Vec3b>(y,x)[1]=Original_image.at<Vec3b>(y,x)[1]*(0.71);
-            gray_image.at<Vec3b>(y,x)[2]=Original_image.at<Vec3b>(y,x)[2]*(0.07);
+            promedio=(Original_image.at<Vec3b>(y,x)[0]+Original_image.at<Vec3b>(y,x)[1]+Original_image.at<Vec3b>(y,x)[2])/3;
+            gray_image.at<Vec3b>(y,x)[0]=promedio;
+            gray_image.at<Vec3b>(y,x)[1]=promedio;
+            gray_image.at<Vec3b>(y,x)[2]=promedio;
         }
     }
 }
