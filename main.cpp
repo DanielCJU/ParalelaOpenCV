@@ -1,10 +1,10 @@
 #include <iostream>
 #include <cstdlib>
-#include <opencv4/opencv2/opencv_modules.hpp>
-#include <opencv4/opencv2/photo.hpp>
-#include <opencv4/opencv2/opencv.hpp>
-#include <opencv4/opencv2/core/core.hpp>
-#include <opencv4/opencv2/core.hpp>
+#include <opencv2/opencv_modules.hpp>
+#include <opencv2/photo.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core.hpp>
 #include <mpi.h>
 #include <string>
 #include <vector>
@@ -305,7 +305,7 @@ int main(int argc, char** argv ){
             Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
             if(mi_rango == 0){
                 Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
-                cout<<newimg.col<<newimg.rows<<endl;
+                cout<<newimg.cols<<newimg.rows<<endl;
                 join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
