@@ -1,0 +1,3 @@
+/home/threads/build/CMakeFiles/rebuild_cache.dir
+/home/threads/build/CMakeFiles/edit_cache.dir
+/home/threads/build/CMakeFiles/OCVTest.dir

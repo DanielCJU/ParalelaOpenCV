@@ -5,7 +5,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/core.hpp>
+#include <omp.h>
 #include <mpi.h>
+#include <thread>
 #include <string>
 #include <vector>
 #include <ctime>
@@ -234,98 +236,125 @@ int main(int argc, char** argv ){
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento, imagen_original;
-
-        MPI_Init(&argc, &argv);
-        MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
-        MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
-
-        if(mi_rango==0){
-            string path(argv[2]);
-            imagen_original=imread(path, 1);
-
-            int diferencia=(imagen_original.cols/procesadores);
-            int agregado=0;
-            if(option=="1" || option=="2")
-            {
-                agregado=2;
-            }
-            int mintemp=0, maxtemp=diferencia;
-
-            Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type());
-            fragmento = tmpfragmento.clone();
-            obtener_fragmento(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
-
-            for(int p=1; p<procesadores; p++){
-                mintemp=(diferencia*p)-agregado;
-                maxtemp=(diferencia*(p+1))+agregado;
-                if((p+1)==procesadores){
-                    maxtemp=imagen_original.cols;
-                }
-                int diference=maxtemp-mintemp;
-                Mat imgToSend(Size(diference, imagen_original.rows), imagen_original.type());
-                obtener_fragmento(imagen_original, imgToSend, mintemp, 0, maxtemp, imagen_original.rows);
-                enviar(imgToSend, p);
-            }
+        const auto hilos_posibles = std::thread::hardware_concurrency;
+        std::cout<<"Hilos posibles: "<<hilos_posibles<<std::endl;
+        if(hilos_posibles==0){
+           std::cout<<"No se pudo identificar el hardware disponible"<<std::endl;
+        } else {
+           
+           int provisto;
+           MPI_Init_thread(&argc, &argv, MPI_THREAD_FUNNELED, &provisto);
+           if(provisto != MPI_THREAD_FUNNELED){
+                std::cout<<"MPI ha entregado valor erroneo"<<std::endl;
+           }
+           MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
+           MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
+           
+           //MPI_Init(&argc, &argv);
+           //MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
+           //MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
         }
-        else{
-            recibir(fragmento,0);
-        }
-        newimg = fragmento.clone();
-        if(option=="1")
+        #pragma omp parallel default(none), \
+                            shared(mi_rango), \
+                            shared(procesadores), \
+                            shared(option), \
+                            shared(newimg), \
+                            shared(img), \
+                            shared(argv), \
+                            shared(fragmento), \
+                            shared(imagen_original), \
+                            shared(ompi_mpi_comm_world), \
+                            shared(ompi_mpi_int), \
+                            shared(ompi_mpi_char)
         {
-            Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
-            if(mi_rango == 0){
-                join_luminosity_scale(newimg, imagen_original, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
-                }
-            }
-            else{
-                enviar(newimg, 0);
-            }
-        }
-        if(option == "2")
-        {
-            Average(fragmento, newimg, fragmento.cols, fragmento.rows);
-            if(mi_rango == 0){
-                join_luminosity_scale(newimg, imagen_original, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
-                }
-            }
-            else{
-                enviar(newimg, 0);
-            }
-        }
-        if(option == "3"){
-            Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
-            if(mi_rango == 0){
-                Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
-                cout<<newimg.cols<<newimg.rows<<endl;
-                join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
-                }
-            }
-            else{
-                enviar(tmpnewimg, 0);
-            }
-        }
-        if(option!="1" && option!="2" && option!="3"){
-            cout<<"La opcion ingresada no es valida..."<<endl;
-            return EXIT_FAILURE;
-        }
-        MPI_Finalize();
-    }
-    else{
-        cout<<"No se ingresaron lo argumentos <opcion> <filepath>..."<<endl;
-        return EXIT_FAILURE;
+         #pragma omp master
+         {
+          if(mi_rango==0){
+              string path(argv[2]);
+              imagen_original=imread(path, 1);
+
+              int diferencia=(imagen_original.cols/procesadores);
+              int agregado=0;
+              if(option=="1" || option=="2")
+              {
+                  agregado=2;
+              }
+              int mintemp=0, maxtemp=diferencia;
+
+              Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type());
+              fragmento = tmpfragmento.clone();
+              obtener_fragmento(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
+
+              for(int p=1; p<procesadores; p++){
+                  mintemp=(diferencia*p)-agregado;
+                  maxtemp=(diferencia*(p+1))+agregado;
+                  if((p+1)==procesadores){
+                      maxtemp=imagen_original.cols;
+                  }
+                  int diference=maxtemp-mintemp;
+                  Mat imgToSend(Size(diference, imagen_original.rows), imagen_original.type());
+                  obtener_fragmento(imagen_original, imgToSend, mintemp, 0, maxtemp, imagen_original.rows);
+                  enviar(imgToSend, p);
+              }
+          } else {
+              recibir(fragmento,0);
+          }
+          newimg = fragmento.clone();
+          if(option=="1")
+          {
+              Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
+              if(mi_rango == 0){
+                  join_luminosity_scale(newimg, imagen_original, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                  }
+              } else {
+                  enviar(newimg, 0);
+              }
+          }
+          if(option == "2")
+          {
+              Average(fragmento, newimg, fragmento.cols, fragmento.rows);
+              if(mi_rango == 0){
+                  join_luminosity_scale(newimg, imagen_original, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                  }
+              } else {
+                 enviar(newimg, 0);
+              }
+          }
+          if(option == "3"){
+              Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+              if(mi_rango == 0){
+                  Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                  //std::cout<<newimg.cols<<newimg.rows<<std::endl;
+                  join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
+                  }
+              } else {
+                  enviar(tmpnewimg, 0);
+              }
+          }
+     /*     if(option!="1" && option!="2" && option!="3"){
+              std::cout<<"La opcion ingresada no es valida..."<<std::endl;
+              return EXIT_FAILURE;
+          }
+          MPI_Finalize();
+      } else {
+          std::cout<<"No se ingresaron lo argumentos <opcion> <filepath>..."<<std::endl;
+          return EXIT_FAILURE;
+      }
+     */
+      }
+     }
     }
     time_t now=time(0);
     struct tm tstruct;

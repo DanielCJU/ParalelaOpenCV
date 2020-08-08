@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.1)
 project( OCVTest )
+find_package( OpenMP REQUIRED )
 find_package( OpenCV REQUIRED )
 find_package( MPI REQUIRED )
 add_executable( OCVTest main.cpp)
@@ -11,6 +12,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 SET(OPENCV_DIR /usr/local/OpenCV/lib/cmake/opencv4)
 include_directories(OPENMPI_DIR /usr/include/x86_64-linux-gnu/openmpi )
 include_directories(MPI_DIR /usr/include/x86_64-linux-gnu/mpi )
-target_link_libraries( OCVTest ${OpenCV_LIBS} ${MPI_C_LIBRARIES} )
+target_link_libraries( OCVTest ${OpenCV_LIBS} ${MPI_C_LIBRARIES} OpenMP::OpenMP_CXX )
 
 
