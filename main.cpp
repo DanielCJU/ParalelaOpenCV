@@ -38,7 +38,7 @@ float linear_extrapolation(float k1, float k0, float divi){
 void Generar_mascara(float base[9][9]){
     for(int i = 0; i<9; i++){
         for(int j = 0; j<9; j++){
-            float expo = exp(-1*((pow(i-4,2)+pow(j-4,2))/(2*pow(1.5,2))));
+            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(1.5,2))));
             base[i][j]=expo/(2*3.1416*pow(1.5,2));
         }
     }
