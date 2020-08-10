@@ -312,6 +312,7 @@ int main(int argc, char** argv ){
           if(option=="1")
           {
               Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
+              Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);
               if(mi_rango == 0){
                   join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                   for(int p = 1; p < procesadores; p++){
