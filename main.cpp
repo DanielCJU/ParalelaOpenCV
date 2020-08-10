@@ -299,7 +299,16 @@ int main(int argc, char** argv ){
           } else {
               recibir(fragmento,0);
           }
-          newimg = fragmento.clone();
+              
+          if(option=="3")
+          {
+               newimg.create(fragmento.rows*2, fragmento.cols*2, CV_8UC4);
+          }
+          else
+          {
+               newimg = fragmento.clone();
+          }
+
           if(option=="1")
           {
               Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
