@@ -215,20 +215,24 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 
             int int_x = (int) float_x;
             int int_y = (int) float_y;
-            float k1=float_x-int_x;
-            float k2=float_y-int_y;
 
-            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1);
-            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], k1);
-            int R=linear_extrapolation(a1, a2, k2);
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], float_x-int_x);
+            int R=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
 
-            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], k1);
-            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], k1);
-            int G=linear_extrapolation(a1, a2, k2);
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], float_x-int_x);
+            int G=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
 
-            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], k1);
-            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], k1);
-            int B=linear_extrapolation(a1, a2, k2);
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], float_x-int_x);
+            int B=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
 
             nueva_imagen.at<Vec3b>(y, x)[0] = R;
             nueva_imagen.at<Vec3b>(y, x)[1] = G;
