@@ -35,9 +35,9 @@ float linear_extrapolation(float k1, float k0, float divi){
  * Parametros:
        -Base: Matriz bidimensional flotante la cual es utilizada como mascara para difuminado en otra funcion.
 */
-void Generar_mascara(float base[9][9]){
-    for(int i = 0; i<9; i++){
-        for(int j = 0; j<9; j++){
+void Generar_mascara(float base[5][5]){
+    for(int i = 0; i<5; i++){
+        for(int j = 0; j<5; j++){
             float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(1.5,2))));
             base[i][j]=expo/(2*3.1416*pow(1.5,2));
         }
@@ -125,7 +125,7 @@ void recibir(Mat &fragmento,int remitente){
        -max_y Cantidad total de filas (casilas en el eje Y)
 */
 void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
-    float mascara[9][9]; ///Mascara flotante a utilizar
+    float mascara[5][5]; ///Mascara flotante a utilizar
     Generar_mascara(mascara);
     for(int x=0; x<max_x; x++)
     {
@@ -134,9 +134,9 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
             for(int color=0; color<3; color++)
             {
                 float sumador = 0;
-                for(int xm=-4; xm<5; xm++)
+                for(int xm=-2; xm<3; xm++)
                 {
-                    for(int ym=-4; ym<5; ym++)
+                    for(int ym=-2; ym<3; ym++)
                     {
                         if(xm+x>=0 && xm+x<max_x)
                         {
@@ -231,7 +231,6 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 int main(int argc, char** argv ){
     string option(argv[1]);
     Mat newimg;
-    Mat newimg2;
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento, imagen_original;
@@ -258,7 +257,6 @@ int main(int argc, char** argv ){
                             shared(procesadores), \
                             shared(option), \
                             shared(newimg), \
-                            shared(newimg2), \
                             shared(img), \
                             shared(argv), \
                             shared(fragmento), \
@@ -299,10 +297,20 @@ int main(int argc, char** argv ){
           } else {
               recibir(fragmento,0);
           }
-          newimg = fragmento.clone();
+
+          if(option=="3")
+          {
+               newimg.create(fragmento.rows*2, fragmento.cols*2, CV_8UC4);
+          }
+          else
+          {
+               newimg = fragmento.clone();
+          }
+
           if(option=="1")
           {
               Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
+              Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);
               if(mi_rango == 0){
                   join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                   for(int p = 1; p < procesadores; p++){
@@ -331,13 +339,13 @@ int main(int argc, char** argv ){
           if(option == "3"){
               Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
               if(mi_rango == 0){
-                  Mat newimg2(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                  Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
                   //std::cout<<newimg.cols<<newimg.rows<<std::endl;
-                  join_luminosity_scale(tmpnewimg, newimg2, 0, procesadores);
+                  join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
                   for(int p = 1; p < procesadores; p++){
                       Mat imgtmpjoin;
                       recibir(imgtmpjoin, p);
-                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
+                      join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                   }
               } else {
                   enviar(tmpnewimg, 0);
@@ -361,13 +369,6 @@ int main(int argc, char** argv ){
     char buf[80];
     tstruct= *localtime(&now);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
-    if(option=="3")
-    {
-        imwrite(option+"_"+string(buf)+".png", newimg2);
-    }
-    else
-    {
-        imwrite(option+"_"+string(buf)+".png", newimg);
-    }
+    imwrite(option+"_"+string(buf)+".png", newimg);
     return EXIT_SUCCESS;
 }
