@@ -16,7 +16,17 @@
 using namespace cv;
 using namespace std;
 int rangeMin, rangeMax;
-/** Funciones **/
+/*
+Titulo del Proyecto: Trabajo de imagenes
+
+Descripcion del Proyecto:
+
+Participantes: Ricardo Aliste G.
+               Daniel Cajas U.
+               Rodrigo Carmona R.
+*/
+
+/**-------------------------------------------------------------------- Funciones --------------------------------------------------------------------**/
 
 /*
  * lineal_extrapolation: Funcion para realizar extrapolacion lineal
@@ -228,9 +238,37 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
     return nueva_imagen;
 }
 
+int N_iteraciones(int filas, columnas)
+{
+     int pixeles=filas*columnas;
+     if(pixeles<=163120)
+     {
+          return 1;
+     }
+     else
+     {
+          if(pixeles<=326240)
+          {
+               return 2;
+          }
+          else
+          {
+               if(pixeles<=1100710)
+               {
+                    return 4;
+               }
+               else
+               {
+                    return 6;
+               }
+          }
+     }
+}
+
 int main(int argc, char** argv ){
     string option(argv[1]);
     Mat newimg;
+    int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento, imagen_original;
@@ -270,7 +308,9 @@ int main(int argc, char** argv ){
           if(mi_rango==0){
               string path(argv[2]);
               imagen_original=imread(path, 1);
-
+              
+              iteracion_blur=N_iteraciones(imagen_original.rows, imagen_original.cols);
+              
               int diferencia=(imagen_original.cols/procesadores);
               int agregado=0;
               if(option=="1" || option=="2")
@@ -310,7 +350,10 @@ int main(int argc, char** argv ){
           if(option=="1")
           {
               Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
-              Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);
+              if(iteraciones_blur!=0)
+              {
+                   for(int i=0; i<iteraciones_blur; i++){Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);}
+              }
               if(mi_rango == 0){
                   join_luminosity_scale(newimg, imagen_original, 0, procesadores);
                   for(int p = 1; p < procesadores; p++){
