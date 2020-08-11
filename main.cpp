@@ -314,7 +314,7 @@ int main(int argc, char** argv ){
               string path(argv[2]);
               imagen_original=imread(path, 1);
               
-              iteracion_blur=N_iteraciones(imagen_original.rows, imagen_original.cols);
+              iteraciones_blur=N_iteraciones(imagen_original.rows, imagen_original.cols);
               
               int diferencia=(imagen_original.cols/procesadores);
               int agregado=0;
