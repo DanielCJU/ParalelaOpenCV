@@ -48,11 +48,34 @@ float linear_extrapolation(float k1, float k0, float divi){
 void Generar_mascara(float base[5][5]){
     for(int i = 0; i<5; i++){
         for(int j = 0; j<5; j++){
+            float expo = exp(-1*((pow(i,2)+pow(j,2))/(2*pow(1.5,2))));
+            base[i][j]=expo/(2*3.1416*pow(1.5,2));
+        }
+    }
+}
+/*
+alternativa
+void Generar_mascara(float base[5][5]){
+    for(int i = 0; i<5; i++){
+        for(int j = 0; j<5; j++){
+            float expo = exp(-1*((pow(i+1,2)+pow(j+1,2))/(2*pow(1.5,2))));
+            base[i][j]=expo/(2*3.1416*pow(1.5,2));
+        }
+    }
+}
+*/
+
+/*
+original
+void Generar_mascara(float base[5][5]){
+    for(int i = 0; i<5; i++){
+        for(int j = 0; j<5; j++){
             float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(1.5,2))));
             base[i][j]=expo/(2*3.1416*pow(1.5,2));
         }
     }
 }
+*/
 
 /*
 */
