@@ -71,11 +71,11 @@ void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int
 /*
 */
 void join_gaussian_blur(Mat Original_image, Mat & new_image){
-    if (final.empty()) {
-        final = parte_imagen.clone();
+    if (new_image.empty()) {
+        new_image = Original_image.clone();
     }
     else {
-        hconcat(final, parte_imagen, final);
+        hconcat(new_image, Original_image, new_image);
     }
 }
 
