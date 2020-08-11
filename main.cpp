@@ -398,6 +398,7 @@ int main(int argc, char** argv ){
                   enviar(tmpnewimg, 0);
               }
           }
+          MPI_Finalize();
      /*     if(option!="1" && option!="2" && option!="3"){
               std::cout<<"La opcion ingresada no es valida..."<<std::endl;
               return EXIT_FAILURE;
