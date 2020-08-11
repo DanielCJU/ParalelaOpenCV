@@ -242,7 +242,7 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
     return nueva_imagen;
 }
 
-int N_iteraciones(int filas, columnas)
+int N_iteraciones(int filas, int columnas)
 {
      int pixeles=filas*columnas;
      if(pixeles<=163120)
@@ -305,7 +305,8 @@ int main(int argc, char** argv ){
                             shared(imagen_original), \
                             shared(ompi_mpi_comm_world), \
                             shared(ompi_mpi_int), \
-                            shared(ompi_mpi_char)
+                            shared(ompi_mpi_char), \
+                            shared(iteraciones_blur)
         {
          #pragma omp master
          {
