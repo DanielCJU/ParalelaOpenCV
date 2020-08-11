@@ -70,23 +70,16 @@ void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int
 
 /*
 */
-void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores){
-    int espaciado=(new_image.cols/procesadores)*proceso;
-    int inicio=0, fin=0;
-    if(proceso!=0){
-        inicio=2;
+void join_gaussian_blur(Mat Original_image, Mat & new_image){
+    if (final.empty()) {
+        final = parte_imagen.clone();
     }
-    if(proceso==procesadores-1){
-        fin=-2;
-    }
-    for(int x=0; x<Original_image.cols+fin; x++){
-        for(int y=0; y<Original_image.rows; y++){
-            new_image.at<Vec3b>(y,espaciado+x)[0]=Original_image.at<Vec3b>(y,x+inicio)[0];
-            new_image.at<Vec3b>(y,espaciado+x)[1]=Original_image.at<Vec3b>(y,x+inicio)[1];
-            new_image.at<Vec3b>(y,espaciado+x)[2]=Original_image.at<Vec3b>(y,x+inicio)[2];
-        }
+    else {
+        hconcat(final, parte_imagen, final);
     }
 }
+
+
 
 /*
 */
@@ -279,7 +272,7 @@ int main(int argc, char** argv ){
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                    join_gaussian_blur(imgtmpjoin, imagen_original);
                 }
             }
             else{
