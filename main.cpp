@@ -225,7 +225,7 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
     }
 }
 
-cv::Mat bi_lineal_scale(Mat imagen_original, Mat Nueva_imagen){
+cv::Mat bi_lineal_scale(Mat imagen_original, Mat nueva_imagen){
     int columnas_nueva_imagen = Nueva_imagen.cols;
     int filas_nueva_imagen = Nueva_imagen.rows;
     float a1,a2;
@@ -448,7 +448,8 @@ int main(int argc, char** argv ){
               }
           }
           if(option == "3"){
-              bi_lineal_scale(fragmento, newimg);
+              Mat tmpnewimgcreate(fragmento.rows*2, fragmento.cols*2, CV_8UC4);
+              bi_lineal_scale(fragmento, tmpnewimg);
               if(mi_rango == 0){
                   //std::cout<<newimg.cols<<newimg.rows<<std::endl;
                   join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
