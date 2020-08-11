@@ -225,7 +225,45 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
     }
 }
 
+cv::Mat bi_lineal_scale(Mat imagen_original, Mat Nueva_imagen){
+    int columnas_nueva_imagen = Nueva_imagen.cols;
+    int filas_nueva_imagen = Nueva_imagen.rows;
+    float a1,a2;
+    for(int x = 0; x < columnas_nueva_imagen; x++){
+        for(int y = 0; y < filas_nueva_imagen; y++){
+            float float_x = ((float)(x) / columnas_nueva_imagen) * (imagen_original.cols - 1);
+            float float_y = ((float)(y) / filas_nueva_imagen) * (imagen_original.rows - 1);
 
+            int int_x = (int) float_x;
+            int int_y = (int) float_y;
+
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], float_x-int_x);
+            int R=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
+
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], float_x-int_x);
+            int G=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
+
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], float_x-int_x);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], float_x-int_x);
+            int B=linear_extrapolation(a1, a2, float_y-int_y);
+            a1=0;
+            a2=0;
+
+            nueva_imagen.at<Vec3b>(y, x)[0] = R;
+            nueva_imagen.at<Vec3b>(y, x)[1] = G;
+            nueva_imagen.at<Vec3b>(y, x)[2] = B;
+            nueva_imagen.at<Vec4b>(y, x)[3] = 255;
+        }
+    }
+}
+
+/*
 cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
     int columnas_nueva_imagen = imagen_original.cols*aumento;
     int filas_nueva_imagen = imagen_original.rows*aumento;
@@ -260,10 +298,12 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
             nueva_imagen.at<Vec3b>(y, x)[0] = R;
             nueva_imagen.at<Vec3b>(y, x)[1] = G;
             nueva_imagen.at<Vec3b>(y, x)[2] = B;
+            nueva_imagen.at<Vec4b>(y, x)[3] = 255;
         }
     }
     return nueva_imagen;
 }
+*/
 
 int N_iteraciones(int filas, int columnas)
 {
@@ -408,7 +448,7 @@ int main(int argc, char** argv ){
               }
           }
           if(option == "3"){
-              Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+              bi_lineal_scale(fragmento, newimg);
               if(mi_rango == 0){
                   //std::cout<<newimg.cols<<newimg.rows<<std::endl;
                   join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
@@ -418,7 +458,7 @@ int main(int argc, char** argv ){
                       join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                   }
               } else {
-                  enviar(tmpnewimg, 0);
+                  enviar(newimg, 0);
               }
           }
           MPI_Finalize();
