@@ -259,11 +259,11 @@ int N_iteraciones(int filas, int columnas)
           {
                if(pixeles<=1100710)
                {
-                    return 4;
+                    return 3;
                }
                else
                {
-                    return 6;
+                    return 4;
                }
           }
      }
