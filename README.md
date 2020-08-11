@@ -5,5 +5,5 @@ Pasos para utilizar el programa:
 - Crear una carpeta de construcción y situarse en ésta por terminal. Por ejemplo: mkdir build && cd build.
 - Utilizar cmake desde la carpeta de construcción. Por ejemplo: cmake [ruta del proyecto].
 2) Compilar el ejecutable con el archivo Makefile. Esto se hace con el comando make.
-3) Ejecutar el programa con la siguiente sintaxis: OCVTest [operación a realizar] [ruta de la imagen a procesar].
+3) Ejecutar el programa con la siguiente sintaxis: ./OCVTest [operación a realizar] [ruta de la imagen a procesar].
 La imagen resultante se encontrará en la carpeta del proyecto.
