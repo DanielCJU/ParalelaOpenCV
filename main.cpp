@@ -71,7 +71,6 @@ void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int
 /*
 */
 void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores){
-    cout<<proceso<<"-"<<procesadores<<endl;
     int espaciado=(new_image.cols/procesadores)*proceso;
     int inicio=0, fin=0;
     if(proceso!=0){
@@ -284,16 +283,16 @@ int main(int argc, char** argv ){
         {
             Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
             if(mi_rango == 0){
-                join_luminosity_scale(newimg, imagen_original, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_gaussian_blur(imgtmpjoin, newimg, p, procesadores);
-                }
-            }
-            else{
-                enviar(newimg, 0);
-            }
+                  join_luminosity_scale(newimg, imagen_original, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                  }
+              }
+              else{
+                  enviar(newimg, 0);
+              }
         }
         if(option == "2")
         {
