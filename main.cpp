@@ -287,7 +287,7 @@ int main(int argc, char** argv ){
                   for(int p = 1; p < procesadores; p++){
                       Mat imgtmpjoin;
                       recibir(imgtmpjoin, p);
-                      join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                      join_gaussian_blur(imgtmpjoin, newimg, p, procesadores);
                   }
               }
               else{
@@ -302,7 +302,7 @@ int main(int argc, char** argv ){
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                 }
             }
             else{
