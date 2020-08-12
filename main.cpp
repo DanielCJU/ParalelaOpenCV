@@ -236,27 +236,29 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
 }
 
 
-cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
-    int newcols = imagen_original.cols*aumento;
-    int newrows = imagen_original.rows*aumento;
-    Mat nueva_imagen(newrows, newcols, CV_8UC3);
-    for(int x = 0; x < newcols; x++){
-        for(int y = 0; y < newrows; y++){
-            float gx = ((float)(x) / newcols) * (imagen_original.cols - 1);
-            float gy = ((float)(y) / newrows) * (imagen_original.rows - 1);
+void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, float aumento){
+    for(int x = 0; x < nueva_imagen.cols; x++){
+        for(int y = 0; y < nueva_imagen.rows; y++){
+            float gx = ((float)(x) / nueva_imagen.cols) * (imagen_original.cols - 1);
+            float gy = ((float)(y) / nueva_imagen.rows) * (imagen_original.rows - 1);
 
             int gxi = (int) gx;
             int gyi = (int) gy;
-            int red = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[0], imagen_original.at<Vec3b>(gyi + 1, gxi)[0], imagen_original.at<Vec3b>(gyi, gxi + 1)[0], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[0], gx - gxi, gy - gyi);
-            int green = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[1], imagen_original.at<Vec3b>(gyi + 1, gxi)[1], imagen_original.at<Vec3b>(gyi, gxi + 1)[1], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[1], gx - gxi, gy - gyi);
-            int blue = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[2], imagen_original.at<Vec3b>(gyi + 1, gxi)[2], imagen_original.at<Vec3b>(gyi, gxi + 1)[2], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[2], gx - gxi, gy - gyi);
+            int red = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[0], imagen_original.at<Vec3b>(gyi + 1, gxi)[0], 
+                                              imagen_original.at<Vec3b>(gyi, gxi + 1)[0], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[0], 
+                                              gx - gxi, gy - gyi);
+            int green = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[1], imagen_original.at<Vec3b>(gyi + 1, gxi)[1], 
+                                                imagen_original.at<Vec3b>(gyi, gxi + 1)[1], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[1], 
+                                                gx - gxi, gy - gyi);
+            int blue = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[2], imagen_original.at<Vec3b>(gyi + 1, gxi)[2], 
+                                               imagen_original.at<Vec3b>(gyi, gxi + 1)[2], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[2], 
+                                               gx - gxi, gy - gyi);
 
             nueva_imagen.at<Vec3b>(y, x)[0] = red;
             nueva_imagen.at<Vec3b>(y, x)[1] = green;
             nueva_imagen.at<Vec3b>(y, x)[2] = blue;
         }
     }
-    return nueva_imagen;
 }
 
 int main(int argc, char** argv ){
@@ -349,14 +351,16 @@ int main(int argc, char** argv ){
             }
         }
         if(option == "3"){
-            Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+            Mat tmpnewimg(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
+            bi_lineal_scale(fragmento, tmpnewimg, 2.0);
             if(mi_rango == 0){
                 Mat img_escalada(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
                 join_luminosity_scale(tmpnewimg, img_escalada, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
+                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                    newimg=imagen_original.clone();
                 }
             }
             else{
