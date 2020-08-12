@@ -23,23 +23,23 @@ int N_iteraciones(int filas, int columnas)
      int pixeles=filas*columnas;
      if(pixeles<=163120/2)
      {
-          return 1;
+          return 3;
      }
      else
      {
           if(pixeles<=326240/2)
           {
-               return 2;
+               return 4;
           }
           else
           {
                if(pixeles<=1100710/2)
                {
-                    return 3;
+                    return 5;
                }
                else
                {
-                    return 4;
+                    return 6;
                }
           }
      }
