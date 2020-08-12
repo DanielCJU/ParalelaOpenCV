@@ -324,7 +324,7 @@ int main(int argc, char** argv ){
                       Mat imgtmpjoin;
                       recibir(imgtmpjoin, p);
                       join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
-                      newimg=imagen_original.clone
+                      newimg=imagen_original.clone();
                   }
               }
               else{
@@ -340,6 +340,7 @@ int main(int argc, char** argv ){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
                     join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                     newimg=imagen_original.clone();
                 }
             }
             else{
@@ -355,6 +356,7 @@ int main(int argc, char** argv ){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
                     join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
+                     newimg=imagen_original.clone();
                 }
             }
             else{
