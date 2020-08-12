@@ -293,13 +293,13 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
        -nueva_imagen: Imagen en blanco, en donde se almacenara la imagen escalada
        -aumento: Valor por el cual la imagen sera re-escalada (x2)
 */
-void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen)
+void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, int aumento)
 {
     float L1, L2;
-    for(int x = 0; x < nueva_imagen.cols; x++){
-        for(int y = 0; y < nueva_imagen.rows; y++){
-            float float_x = ((float)(x) / nueva_imagen.cols) * (imagen_original.cols - 1);
-            float float_y = ((float)(y) / nueva_imagen.rows) * (imagen_original.rows - 1);
+    for(int x = 0; x < imagen_original.cols*aumento; x++){
+        for(int y = 0; y < imagen_original.rows*aumento; y++){
+            float float_x = ((float)(x) / imagen_original.cols*aumento) * (imagen_original.cols - 1);
+            float float_y = ((float)(y) / imagen_original.rows*aumento) * (imagen_original.rows - 1);
 
             int int_x = (int) float_x;
             int int_y = (int) float_y;
@@ -414,7 +414,8 @@ int main(int argc, char** argv ){
             }
         }
         if(option == "3"){
-            bi_lineal_scale(fragmento, newimg);
+            Mat tmpnewimg;
+            bi_lineal_scale(fragmento, tmpnewimg, 2.0);
             if(mi_rango == 0){
                 Mat img_escalada(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
                 join_luminosity_scale(tmpnewimg, img_escalada, 0, procesadores);
@@ -426,7 +427,7 @@ int main(int argc, char** argv ){
                 }
             }
             else{
-                enviar(newimg, 0);
+                enviar(tmpnewimg, 0);
             }
         }
         if(option!="1" && option!="2" && option!="3"){
