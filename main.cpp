@@ -13,7 +13,7 @@
 
 using namespace cv;
 using namespace std;
-int rangeMin, rangeMax, int iteraciones_blur=0;
+int rangeMin, rangeMax;
 /** Funciones **/
 
 /*
@@ -21,19 +21,19 @@ int rangeMin, rangeMax, int iteraciones_blur=0;
 int N_iteraciones(int filas, int columnas)
 {
      int pixeles=filas*columnas;
-     if(pixeles<=163120)
+     if(pixeles<=163120/2)
      {
           return 1;
      }
      else
      {
-          if(pixeles<=326240)
+          if(pixeles<=326240/2)
           {
                return 2;
           }
           else
           {
-               if(pixeles<=1100710)
+               if(pixeles<=1100710/2)
                {
                     return 3;
                }
@@ -79,7 +79,7 @@ float bi_linear_extrapolation(float a, float b, float c, float d, float x, float
 void Generar_mascara(float base[5][5]){
     for(int i = 0; i<5; i++){
         for(int j = 0; j<5; j++){
-            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(1.5,2))));
+            float expo = exp(-1*((pow(i,2)+pow(j,2))/(2*pow(1.5,2))));
             base[i][j]=expo/(2*3.1416*pow(1.5,2));
         }
     }
@@ -262,7 +262,7 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 int main(int argc, char** argv ){
     string option(argv[1]);
     Mat newimg;
-    
+    int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento, imagen_original;
@@ -274,9 +274,7 @@ int main(int argc, char** argv ){
         if(mi_rango==0){
             string path(argv[2]);
             imagen_original=imread(path, 1);
-             if(iteraciones_blur==0){
-            iteraciones_blur=N_iteraciones(imagen_original.rows, imagen_original.cols);
-            }
+             
             int diferencia=(imagen_original.cols/procesadores);
             int agregado=0;
             if(option=="1" || option=="2")
@@ -313,6 +311,9 @@ int main(int argc, char** argv ){
         }
          if(option=="1")
         {
+            if(iteraciones_blur==0){
+                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols);
+            }
             Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
               if(iteraciones_blur!=0)
               {
