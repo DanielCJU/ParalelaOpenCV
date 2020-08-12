@@ -9,10 +9,11 @@ _Sistema operativo soportado:_
 * OS: linux (testeado en Ubuntu 20.4)
 
 _Librerias necesarias:_
-* Compilador GNU C++ y librerías básicas de C/C++: [apt-get install build-essentials]
-* git, para clonar el repositorio: [apt-get install git-core]
-* Openmpi: [apt-get install libopenmpi-dev]
-* ssh, para utilizar varias máquinas en cluster: [apt-get install openssh-server]
+* Compilador GNU C++ y librerías básicas de C/C++: [sudo apt-get install build-essentials]
+* git, para clonar el repositorio: [sudo apt-get install git-core]
+* Openmpi: [sudo apt-get install libopenmpi-dev]
+* ssh, para utilizar varias máquinas en cluster: [sudo apt-get install openssh-server]
+* cmake, para configurar la compilación del programa: [sudo apt-get install cmake]
 * OpenCV 4 o superior
 
 ### Utilización
