@@ -261,11 +261,11 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 
 int main(int argc, char** argv ){
     string option(argv[1]);
-    Mat newimg;
+    Mat newimg, imagen_original;
     int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento, imagen_original;
+        Mat img, fragmento;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
