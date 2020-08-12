@@ -309,7 +309,7 @@ int main(int argc, char** argv ){
              newimg = fragmento.clone();
         }
         else{
-             newimg.create(fragmento.rows*2, fragmento.cols*2, CV_8UC4);
+             newimg.create(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
         }
          if(option=="1")
         {
