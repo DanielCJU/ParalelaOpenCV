@@ -5,7 +5,9 @@ _Proyecto de imágenes computación paralela y distribuida con OpenCV y OpenMPI(
 ### Pre-requisitos
 
 _Sistema operativo soportado:_
+
 * OS: linux (testeado en Ubuntu 20.4)
+
 _Librerias necesarias:_
 * Compilador GNU C++ y librerías básicas de C/C++: [apt-get install build-essentials]
 * git, para clonar el repositorio: [apt-get install git-core]
