@@ -416,16 +416,13 @@ int main(int argc, char** argv ){
         if(option == "3"){
             Mat tmpnewimg;
             bi_lineal_scale(fragmento, tmpnewimg, 2.0);
-            cout<<tmpnewimg.cols<<"-"<<tmpnewimg.cols<<endl;
             if(mi_rango == 0){
                 Mat img_escalada(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
                 join_luminosity_scale(tmpnewimg, img_escalada, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    cout<<"re:"<<imgtmpjoin.cols<<"-"<<imgtmpjoin.cols<<endl;
-                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
-                    newimg=imagen_original.clone();
+                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                 }
             }
             else{
