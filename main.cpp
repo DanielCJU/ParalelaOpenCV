@@ -261,7 +261,7 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 
 int main(int argc, char** argv ){
     string option(argv[1]);
-    Mat newimg, imagen_original;
+    Mat newimg;
     int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
@@ -324,6 +324,7 @@ int main(int argc, char** argv ){
                       Mat imgtmpjoin;
                       recibir(imgtmpjoin, p);
                       join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
+                      newimg=imagen_original.clone
                   }
               }
               else{
@@ -375,6 +376,6 @@ int main(int argc, char** argv ){
     char buf[80];
     tstruct= *localtime(&now);
     strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
-    imwrite(option+"_"+string(buf)+".png", imagen_original);
+    imwrite(option+"_"+string(buf)+".png", newimg);
     return EXIT_SUCCESS;
 }
