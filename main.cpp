@@ -79,8 +79,8 @@ float bi_linear_extrapolation(float a, float b, float c, float d, float x, float
 void Generar_mascara(float base[5][5]){
     for(int i = 0; i<5; i++){
         for(int j = 0; j<5; j++){
-            float expo = exp(-1*((pow(i,2)+pow(j,2))/(2*pow(1.5,2))));
-            base[i][j]=expo/(2*3.1416*pow(1.5,2));
+            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(0.99,2))));
+            base[i][j]=expo/(2*3.1416*pow(0.99,2));
         }
     }
 }
@@ -356,8 +356,7 @@ int main(int argc, char** argv ){
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
-                     newimg=imagen_original.clone();
+                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
                 }
             }
             else{
