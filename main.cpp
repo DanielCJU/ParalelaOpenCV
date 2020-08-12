@@ -13,7 +13,7 @@
 
 using namespace cv;
 using namespace std;
-int rangeMin, rangeMax;
+int rangeMin, rangeMax, int iteraciones_blur=0;
 /** Funciones **/
 
 /*
@@ -262,7 +262,7 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
 int main(int argc, char** argv ){
     string option(argv[1]);
     Mat newimg;
-    int iteraciones_blur=0;
+    
     if(argc > 2){
         int mi_rango, procesadores;
         Mat img, fragmento, imagen_original;
@@ -274,9 +274,9 @@ int main(int argc, char** argv ){
         if(mi_rango==0){
             string path(argv[2]);
             imagen_original=imread(path, 1);
-             
+             if(iteraciones_blur==0){
             iteraciones_blur=N_iteraciones(imagen_original.rows, imagen_original.cols);
-             
+            }
             int diferencia=(imagen_original.cols/procesadores);
             int agregado=0;
             if(option=="1" || option=="2")
