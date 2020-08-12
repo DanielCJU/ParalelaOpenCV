@@ -14,7 +14,7 @@
 using namespace cv;
 using namespace std;
 int rangeMin, rangeMax;
-/** Funciones **/
+/*------------------------------------------------------------ Funciones ------------------------------------------------------------*/
 
 /*
  * N_iteraciones: Funcion que, en funcion de la cantidad total de pixeles, estima la cantidad de iteraciones de difuminado gausiano realizar.
@@ -175,6 +175,10 @@ void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int pr
 }
 
 /*
+ * enviar: Funcion encargada de realizar el envio de los fragmentos y la comunicacion de envio
+ * Parametros:
+       -imagen: Imagen a enviar.
+       -destinatario: Numero del proceso enviante.
 */
 void enviar(Mat imagen, int destinatario)
 {
@@ -189,6 +193,10 @@ void enviar(Mat imagen, int destinatario)
 }
 
 /*
+ * enviar: Funcion encargada de realizar el envio de los fragmentos y la comunicacion de envio
+ * Parametros:
+       -fragmento: Imagen a enviar.
+       -remitente: Numero del procesador recibido.
 */
 void recibir(Mat &fragmento,int remitente)
 {
@@ -204,7 +212,6 @@ void recibir(Mat &fragmento,int remitente)
  * Gaussian_blur: Algoritmo para difuminar una imagen; se basa en el metodo de difuminado gausiano, el cual utiliza una mascara sobre
    el area a difuminar para asi reducir el error relativo en los pixeles (se reduce la prob. de pixeles mal difuminados y problemas
    de iluminacion en la imagen)
-
  * Parametros:
        -Original_image: Imagen original, la cual a de ser convertida a escala de grises
        -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
@@ -257,14 +264,11 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y)
 }
 
 /*
- * Average: Algoritmo para convertir imagenes de color a grises; se basa en convertir el respectivo color (RGB) segun el espectro de vision humana.
-   Este se expresa con que: Rojo(R)*0.21 | Verde(G)*0.71 | Azul(B)*0.07
-
+ * Average: Algoritmo para convertir imagenes de color a grises; se basa en promediar los valores de los 3 canales (RGB) del respectivo pixeles
  * Parametros:
        -Original_image: Imagen original, la cual a de ser convertida a escala de grises
        -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
-       -max_x: Cantidad total de columnas (casillas en el eje X)
-       -max_y Cantidad total de filas (casilas en el eje Y)
+       -max_x y max_y: Cantidad total de columnas (X) y de filas (Y)
 */
 void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
 {
@@ -281,7 +285,14 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
     }
 }
 
-
+/*
+ * bi_lineal_scale: Algoritmo para re escalado de imagenes; se basa en en aplicar una extrapolacion bilineal (osea, una extrapolacion lineal a otras 
+ 2 extrapolaciones lineales), para generar el pixel correspondiente a la ubicacion.
+ * Parametros:
+       -Original_image: Imagen original, la cual a de ser re escalada
+       -nueva_imagen: Imagen en blanco, en donde se almacenara la imagen escalada
+       -aumento: Valor por el cual la imagen sera re-escalada (x2)
+*/
 void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, float aumento)
 {
     float L1, L2;
@@ -311,6 +322,8 @@ void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, float aumento)
     }
 }
 
+
+/*------------------------------------------------------------   Main   ------------------------------------------------------------*/
 int main(int argc, char** argv ){
     string option(argv[1]);
     Mat newimg;
