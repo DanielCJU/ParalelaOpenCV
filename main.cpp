@@ -265,7 +265,7 @@ int main(int argc, char** argv ){
     int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento;
+        Mat img, fragmento, imagen_original;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
