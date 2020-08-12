@@ -23,23 +23,23 @@ int N_iteraciones(int filas, int columnas)
      int pixeles=filas*columnas;
      if(pixeles<=163120/2)
      {
-          return 3;
+          return 6;
      }
      else
      {
           if(pixeles<=326240/2)
           {
-               return 4;
+               return 8;
           }
           else
           {
                if(pixeles<=1100710/2)
                {
-                    return 5;
+                    return 10;
                }
                else
                {
-                    return 6;
+                    return 12;
                }
           }
      }
@@ -79,8 +79,8 @@ float bi_linear_extrapolation(float a, float b, float c, float d, float x, float
 void Generar_mascara(float base[5][5]){
     for(int i = 0; i<5; i++){
         for(int j = 0; j<5; j++){
-            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(0.99,2))));
-            base[i][j]=expo/(2*3.1416*pow(0.99,2));
+            float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(0.89,2))));
+            base[i][j]=expo/(2*3.1416*pow(0.89,2));
         }
     }
 }
