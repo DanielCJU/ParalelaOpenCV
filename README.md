@@ -48,3 +48,7 @@ El programa cuenta con tres operaciones: difuminar (opción número 1), pasar a 
 ```
 1_20200808204120.png
 ```
+### Equipo Desarrollador:
+* Ricardo Aliste G. Desarrollador/Documentador
+* Daniel Cajas U. Desarrollador/Documentador
+* Rodrigo Carmona R. Documentador
