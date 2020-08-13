@@ -377,6 +377,7 @@ int main(int argc, char** argv ){
         }
          if(option=="1")
         {
+            cout<<procesadores<<endl;
             if(iteraciones_blur==0){
                 iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols, procesadores);
             }
