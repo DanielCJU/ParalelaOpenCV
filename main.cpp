@@ -504,7 +504,6 @@ int main(int argc, char** argv ){
         return EXIT_FAILURE; ///Salida en caso de EXCEPCION
     }
     
-    
     time_t now=time(0); ///Se obtiene La hora actual
     struct tm tstruct; ///Variable para lamacenar la fecha actual
     char buf[80]; ///Variable para lamacenar la fecha actual
