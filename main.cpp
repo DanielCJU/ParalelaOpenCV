@@ -482,7 +482,12 @@ int main(int argc, char** argv ){
                      recibir(imgtmpjoin, p);
                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
                      newimg=newimg2.clone();
-                     imwrite("A.png", newimg); ///Se almacena la imagen resultante
+                     time_t now=time(0); ///Se obtiene La hora actual
+                        struct tm tstruct; ///Variable para lamacenar la fecha actual
+                        char buf[80]; ///Variable para lamacenar la fecha actual
+                        tstruct= *localtime(&now); ///Se obtiene tiempo actual
+                        strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct); ///Se Registra fecha actual
+                        imwrite(option+"_"+string(buf)+".png", newimg); ///Se almacena la imagen resultante
                  }
              }
              else ///Caso de no serlo
