@@ -310,12 +310,15 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
             a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1);
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], k1);
             int R=linear_extrapolation(a1, a2, k2);
+             
             a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], k1);
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], k1);
             int G=linear_extrapolation(a1, a2, k2);
+             
             a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], k1);
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], k1);
             int B=linear_extrapolation(a1, a2, k2);
+             
             nueva_imagen.at<Vec3b>(y, x)[0] = R;
             nueva_imagen.at<Vec3b>(y, x)[1] = G;
             nueva_imagen.at<Vec3b>(y, x)[2] = B;
@@ -423,6 +426,7 @@ int main(int argc, char** argv ){
                       Mat imgtmpjoin;
                       recibir(imgtmpjoin, p);
                       join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
+                      newimg=newimg2.clone();
                   }
               } else {
                   enviar(tmpnewimg, 0);
