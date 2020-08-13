@@ -21,47 +21,48 @@ int rangeMin, rangeMax;
  * Parametros:
      -filas: Cantidad de filas de la imagen
      -columnas: Cantidad de columnas de la imagen
+     -procesadores: Cantidad total de procesadores
 */
-int N_iteraciones(int filas, int columnas)
+int N_iteraciones(int filas, int columnas, int procesadores)
 {
      int pixeles=filas*columnas;
-     if(pixeles<=40780)
+     if(pixeles<=(40780*2)/procesadores)
      {
          return 2;
      }
      else
      {
-         if(pixeles<=81560)
+         if(pixeles<=((81560*2)/procesadores))
          {
               return 5;
          }
          else
          {
-             if(pixeles<=122340)
+             if(pixeles<=((122340*2)/procesadores))
              {
                  return 8;
              }
              else
              {
-                 if(pixeles<=163120)
+                 if(pixeles<=((163120*2)/procesadores))
                  {
                       return 10;
                  }
                  else
                  {
-                     if(pixeles<=356738)
+                     if(pixeles<=((356737.5*2)/procesadores))
                      {
                          return 14;
                      }
                      else
                      {
-                         if(pixeles<=550355)
+                         if(pixeles<=((550355*2)/procesadores))
                          {
                               return 18;
                          }
                          else
                          {
-                             return 22;
+                             return ((22*2)/procesadores);
                          }
                     }
                 }
@@ -377,7 +378,7 @@ int main(int argc, char** argv ){
          if(option=="1")
         {
             if(iteraciones_blur==0){
-                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols);
+                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols, procesadores);
             }
             Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
               if(iteraciones_blur!=0)
