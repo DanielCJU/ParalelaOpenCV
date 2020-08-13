@@ -294,35 +294,35 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
        -nueva_imagen: Imagen en blanco, en donde se almacenara la imagen escalada
        -aumento: Valor por el cual la imagen sera re-escalada (x2)
 */
-void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, int aumento)
-{
-    float L1, L2;
-    for(int x = 0; x < imagen_original.cols*aumento; x++){
-        for(int y = 0; y < imagen_original.rows*aumento; y++){
-            float float_x = ((float)(x) / imagen_original.cols*aumento) * (imagen_original.cols - 1);
-            float float_y = ((float)(y) / imagen_original.rows*aumento) * (imagen_original.rows - 1);
-
+cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
+    int columnas_nueva_imagen = imagen_original.cols*aumento;
+    int filas_nueva_imagen = imagen_original.rows*aumento;
+    Mat nueva_imagen(filas_nueva_imagen, columnas_nueva_imagen, CV_8UC3);
+    float a1,a2;
+    for(int x = 0; x < columnas_nueva_imagen; x++){
+        for(int y = 0; y < filas_nueva_imagen; y++){
+            float float_x = ((float)(x) / columnas_nueva_imagen) * (imagen_original.cols - 1);
+            float float_y = ((float)(y) / filas_nueva_imagen) * (imagen_original.rows - 1);
             int int_x = (int) float_x;
             int int_y = (int) float_y;
-            L1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y + 1, int_x)[0], float_x - int_x);
-            L2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x + 1)[0], imagen_original.at<Vec3b>(int_y + 1, int_x + 1)[0], float_x - int_x);
-            int R = linear_extrapolation(L1, L2, float_y - int_y);
-            
-            L1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y + 1, int_x)[1], float_x - int_x);
-            L2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x + 1)[1], imagen_original.at<Vec3b>(int_y + 1, int_x + 1)[1], float_x - int_x);
-            int G = linear_extrapolation(L1, L2, float_y - int_y);
-            
-            L1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y + 1, int_x)[2], float_x - int_x);
-            L2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x + 1)[2], imagen_original.at<Vec3b>(int_y + 1, int_x + 1)[2], float_x - int_x);
-            int B = linear_extrapolation(L1, L2, float_y - int_y);
-
+            float k1=float_x-int_x;
+            float k2=float_y-int_y;
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], k1);
+            int R=linear_extrapolation(a1, a2, k2);
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], k1);
+            int G=linear_extrapolation(a1, a2, k2);
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], k1);
+            int B=linear_extrapolation(a1, a2, k2);
             nueva_imagen.at<Vec3b>(y, x)[0] = R;
             nueva_imagen.at<Vec3b>(y, x)[1] = G;
             nueva_imagen.at<Vec3b>(y, x)[2] = B;
         }
     }
+    return nueva_imagen;
 }
-
 
 /*------------------------------------------------------------   Main   ------------------------------------------------------------*/
 int main(int argc, char** argv ){
@@ -415,20 +415,19 @@ int main(int argc, char** argv ){
             }
         }
         if(option == "3"){
-            Mat tmpnewimg(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
-            bi_lineal_scale(fragmento, tmpnewimg, 2.0);
-            if(mi_rango == 0){
-                join_luminosity_scale(tmpnewimg, img, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, img, p, procesadores);
-                }
-            }
-            else{
-                enviar(tmpnewimg, 0);
-            }
-        }
+              Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+              if(mi_rango == 0){
+                  Mat newimg2(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                  join_luminosity_scale(tmpnewimg, newimg2, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
+                  }
+              } else {
+                  enviar(tmpnewimg, 0);
+              }
+          }
         if(option!="1" && option!="2" && option!="3"){
             cout<<"La opcion ingresada no es valida..."<<endl;
             return EXIT_FAILURE;
