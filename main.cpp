@@ -419,17 +419,16 @@ int main(int argc, char** argv ){
             Mat tmpnewimg;
             bi_lineal_scale(fragmento, tmpnewimg, 2.0);
             if(mi_rango == 0){
-                Mat img_escalada(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
-                join_luminosity_scale(tmpnewimg, img_escalada, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
-                }
-            }
-            else{
-                enviar(tmpnewimg, 0);
-            }
+                  Mat newimg(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                  join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
+                  }
+              } else {
+                  enviar(tmpnewimg, 0);
+              }
         }
         if(option!="1" && option!="2" && option!="3"){
             cout<<"La opcion ingresada no es valida..."<<endl;
