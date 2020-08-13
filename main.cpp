@@ -327,11 +327,11 @@ void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, int aumento)
 /*------------------------------------------------------------   Main   ------------------------------------------------------------*/
 int main(int argc, char** argv ){
     string option(argv[1]);
-    Mat newimg;
+    Mat newimg, img;
     int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento, imagen_original;
+        Mat fragmento, imagen_original;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
@@ -418,11 +418,11 @@ int main(int argc, char** argv ){
             Mat tmpnewimg(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
             bi_lineal_scale(fragmento, tmpnewimg, 2.0);
             if(mi_rango == 0){
-                join_luminosity_scale(tmpnewimg, newimg, 0, procesadores);
+                join_luminosity_scale(tmpnewimg, img, 0, procesadores);
                 for(int p = 1; p < procesadores; p++){
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, newimg, p, procesadores);
+                    join_luminosity_scale(imgtmpjoin, img, p, procesadores);
                 }
             }
             else{
