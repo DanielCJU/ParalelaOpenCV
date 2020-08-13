@@ -48,6 +48,11 @@ El programa cuenta con tres operaciones: difuminar (opción número 1), pasar a 
 ```
 1_20200808204120.png
 ```
+### Acotaciones Particulares
+
+* El programa se testeo con 1 y 2 procesadores, debido a limitaciones de hardware.
+* Debido al funcionamiento paralelo de MPI, en ocasiones el programa entraga imagenes en blanco, o mas de una imagen para algun tratamiento; en caso de suceder, se recomienda volver a realizar la ejecucion.
+
 ### Equipo Desarrollador:
 * Ricardo Aliste G. Desarrollador/Documentador
 * Daniel Cajas U. Desarrollador/Documentador
