@@ -14,6 +14,32 @@
 using namespace cv;
 using namespace std;
 int rangeMin, rangeMax;
+/*------------------------------------------------------------ Datos Clave ------------------------------------------------------------*/
+/*
+Titulo Proyecto:Proyecto de Imagenes Paralelas
+
+Equipo Desarrollador:
+     -Ricardo Aliste G.
+     -Daniel Cajas U.
+     -Rodrigo Carmona R.
+     
+Descripcion del Proyecto:
+     El proyecto consta de realizar un programa, el cual mediante el recibimiento de cierta informacion (direccion de una imagen, 
+     opcion a realizar dentro del sistema, etc) efectue cierto tipo de tratamiento a una imagen; son 3 posibles tratamientos, los 
+     cuales son:
+     
+     -Difuminado Gaussiano: Realiza un difuminado de la imagen mediante el algoritmo gaussiano, el cual trabaja usando una mascara 
+     de 5X5; este difuminado se aplica una cierta cantidad de veces, dependiendo de la cantidad de pixeles que componen la imagen.
+     
+     -Transformacion a Escala de Grises: Se realiza la transformacion de la imagen a su equivalente, pero en escala de grises; para 
+     esto, se ace uso del algoritmo de promediacion (o Average, por su nombre en ingles), el cual consta de promediar el valor del 
+     canal rojo (R), verde (G) y azul (B), y asignar ese valor a los 3 canales.
+     
+     -Re-escalado: Se realiza un aumento de tamaño de la imagen (del doble por defecto); Esto se realiza mediante el algoritmo de 
+     Extrapolacion Bilineal, la cual se resume en efectuar una extrapolacion lineal a 2 extrapolaciones lineales, las cuales se 
+     generan en funcion de las coordenadas colindantes, y las diferencia de las coordenadas actuales y las resultantes.
+*/
+
 /*------------------------------------------------------------ Funciones ------------------------------------------------------------*/
 
 /*
@@ -26,43 +52,43 @@ int rangeMin, rangeMax;
 int N_iteraciones(int filas, int columnas, int procesadores)
 {
      int pixeles=filas*columnas;
-     if(pixeles<=(40780*2)/procesadores)
+     if(pixeles<=(40780*2)/procesadores) ///Casos de Imagenes relativamente mas pequeñas
      {
          return 2;
      }
      else
      {
-         if(pixeles<=((81560*2)/procesadores))
+         if(pixeles<=((81560*2)/procesadores)) ///Casos de Imagenes relativamente mas pequeñas
          {
               return 5;
          }
          else
          {
-             if(pixeles<=((122340*2)/procesadores))
+             if(pixeles<=((122340*2)/procesadores)) ///Casos de Imagenes relativamente "Medianas"
              {
                  return 8;
              }
              else
              {
-                 if(pixeles<=((163120*2)/procesadores))
+                 if(pixeles<=((163120*2)/procesadores)) ///Casos de Imagenes relativamente "Medianas"
                  {
                       return 10;
                  }
                  else
                  {
-                     if(pixeles<=((356737.5*2)/procesadores))
+                     if(pixeles<=((356737.5*2)/procesadores)) ///Casos de Imagenes relativamente Grandes
                      {
                          return 14;
                      }
                      else
                      {
-                         if(pixeles<=((550355*2)/procesadores))
+                         if(pixeles<=((550355*2)/procesadores)) ///Casos de Imagenes relativamente Grandes
                          {
                               return 18;
                          }
-                         else
+                         else ///Casos de Imagenes relativamente muy grandes
                          {
-                             return ((22*2)/procesadores);
+                             return ((22*2)/procesadores); 
                          }
                     }
                 }
@@ -87,6 +113,8 @@ float linear_extrapolation(float k1, float k0, float divi)
  * Generar_mascara: Funcion encargada de preparar los valores internos de la mascara a utilizar en el difuminado a utilizar gausiano (Gaussian_blur).
  * Parametros:
        -Base: Matriz bidimensional flotante la cual es utilizada como mascara para difuminado en otra funcion.
+       
+ Enlace a formula para mayor referencias: https://wikimedia.org/api/rest_v1/media/math/render/svg/6717136818f2166eba2db0cfc915d732add9c64f
 */
 void Generar_mascara(float base[5][5]){
     for(int i = 0; i<5; i++)
@@ -222,15 +250,15 @@ void recibir(Mat &fragmento,int remitente)
 void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y)
 {
     float mascara[5][5]; ///Mascara flotante a utilizar
-    Generar_mascara(mascara);
-    for(int x=0; x<max_x; x++)
+    Generar_mascara(mascara); ///Se rellena la mascara
+    for(int x=0; x<max_x; x++) 
     {
-        for(int y=0; y<max_y; y++)
+        for(int y=0; y<max_y; y++) ///Se realiza doble ciclo FOR para recorer toda la matriz de la imagen
         {
-            for(int color=0; color<3; color++)
+            for(int color=0; color<3; color++) ///Se efectua analisis Para cada canal (RGB)
             {
                 float sumador = 0;
-                for(int xm=-2; xm<3; xm++)
+                for(int xm=-2; xm<3; xm++) ///Se realiza analisis por cada cordenada dentro de los limites de la mascara
                 {
                     for(int ym=-2; ym<3; ym++)
                     {
@@ -258,7 +286,7 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y)
                         }
                     }
                 }
-                gray_image.at<Vec3b>(y,x)[color]=sumador;
+                gray_image.at<Vec3b>(y,x)[color]=sumador; ///Se registra el valor obtenido
             }
         }
     }
@@ -276,10 +304,10 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
     float promedio;
     for(int x = 0; x < max_x; x++)
     {
-        for(int y = 0; y < max_y; y++)
+        for(int y = 0; y < max_y; y++) ///Se realiza doble ciclo FOR para recorrer matriz
         {
-            promedio=(Original_image.at<Vec3b>(y,x)[0]+Original_image.at<Vec3b>(y,x)[1]+Original_image.at<Vec3b>(y,x)[2])/3;
-            gray_image.at<Vec3b>(y,x)[0]=promedio;
+            promedio=(Original_image.at<Vec3b>(y,x)[0]+Original_image.at<Vec3b>(y,x)[1]+Original_image.at<Vec3b>(y,x)[2])/3; ///Se promedian los valores de los 3 canales
+            gray_image.at<Vec3b>(y,x)[0]=promedio; ///Se procede a asignar el valor a cada canal
             gray_image.at<Vec3b>(y,x)[1]=promedio;
             gray_image.at<Vec3b>(y,x)[2]=promedio;
         }
@@ -297,19 +325,24 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
 cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
     int columnas_nueva_imagen = imagen_original.cols*aumento;
     int filas_nueva_imagen = imagen_original.rows*aumento;
-    Mat nueva_imagen(filas_nueva_imagen, columnas_nueva_imagen, CV_8UC3);
-    float a1,a2;
-    for(int x = 0; x < columnas_nueva_imagen; x++){
-        for(int y = 0; y < filas_nueva_imagen; y++){
+    Mat nueva_imagen(filas_nueva_imagen, columnas_nueva_imagen, CV_8UC3); ///Se genera imagen donde se almacenara la imagen escalda
+    float a1,a2; ///Variables de apoyo, son para almacenar las extrapolaciones lineales
+    for(int x = 0; x < columnas_nueva_imagen; x++)
+    {
+        for(int y = 0; y < filas_nueva_imagen; y++) ///Doble ciclo FOR para recorrer matriz
+        {
             float float_x = ((float)(x) / columnas_nueva_imagen) * (imagen_original.cols - 1);
             float float_y = ((float)(y) / filas_nueva_imagen) * (imagen_original.rows - 1);
+             
             int int_x = (int) float_x;
             int int_y = (int) float_y;
-            float k1=float_x-int_x;
+             
+            float k1=float_x-int_x; ///Divisores a usar en las extrapolacones lineales 
             float k2=float_y-int_y;
-            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1);
+             
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1); ///Se efectuan 2 extrapolaciones lineales
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], k1);
-            int R=linear_extrapolation(a1, a2, k2);
+            int R=linear_extrapolation(a1, a2, k2); ///Se efectua la extrapolacion lineal de las 2 anteriores (extrapolacion bilineal); se efectua esto para cada canal
              
             a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], k1);
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], k1);
@@ -319,47 +352,54 @@ cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
             a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], k1);
             int B=linear_extrapolation(a1, a2, k2);
              
-            nueva_imagen.at<Vec3b>(y, x)[0] = R;
+            nueva_imagen.at<Vec3b>(y, x)[0] = R; ///Se realiza almacenado en cada canal
             nueva_imagen.at<Vec3b>(y, x)[1] = G;
             nueva_imagen.at<Vec3b>(y, x)[2] = B;
         }
     }
-    return nueva_imagen;
+    return nueva_imagen; ///Se retorna imagen resultante
 }
 
 /*------------------------------------------------------------   Main   ------------------------------------------------------------*/
 int main(int argc, char** argv ){
     string option(argv[1]);
-    Mat newimg, img;
-    int iteraciones_blur=0;
-    if(argc > 2){
+    
+    Mat newimg, img; ///Variables de imagenes para respuesta final y apoyo
+    int iteraciones_blur=0; ///Variable para definir cantidad de iteraciones de difuminado gaussiano
+    
+    if(argc > 2) ///En caso de recibir mas de 2 parametros (escenario esperado)
+    { 
         int mi_rango, procesadores;
         Mat fragmento, imagen_original;
-
-        MPI_Init(&argc, &argv);
+        
+        ///Activacion MPI
+        MPI_Init(&argc, &argv); 
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
         MPI_Comm_size(MPI_COMM_WORLD, &procesadores);
-
-        if(mi_rango==0){
-            string path(argv[2]);
-            imagen_original=imread(path, 1);
+        
+        if(mi_rango==0) ///Caso de configuracion inicial
+        { 
+            string path(argv[2]); ///Se obtiene el PATH de la imagen
+            imagen_original=imread(path, 1); ///Se almacena la imagen a tratar
              
-            int diferencia=(imagen_original.cols/procesadores);
+            int diferencia=(imagen_original.cols/procesadores); ///Se detecta tamaño de las imagenes para proceder a cortarlas
             int agregado=0;
-            if(option=="1" || option=="2")
+            if(option=="1" || option=="2") ///Se le añade un marco adicional debido a limites de la imagen, y por tratamiento del difuminado
             {
                 agregado=2;
             }
             int mintemp=0, maxtemp=diferencia;
 
-            Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type());
+            Mat tmpfragmento(Size(diferencia+agregado, imagen_original.rows), imagen_original.type()); ///Se genera imagen que almacena fragmento a tratar de la imagen
             fragmento = tmpfragmento.clone();
             obtener_fragmento(imagen_original, fragmento, 0, 0, diferencia+agregado, imagen_original.rows);
 
-            for(int p=1; p<procesadores; p++){
+            for(int p=1; p<procesadores; p++)
+            {
                 mintemp=(diferencia*p)-agregado;
                 maxtemp=(diferencia*(p+1))+agregado;
-                if((p+1)==procesadores){
+                if((p+1)==procesadores)
+                {
                     maxtemp=imagen_original.cols;
                 }
                 int diference=maxtemp-mintemp;
@@ -368,85 +408,108 @@ int main(int argc, char** argv ){
                 enviar(imgToSend, p);
             }
         }
-        else{
+        else
+        {
             recibir(fragmento,0);
         }
-        if(option=="1" || option=="2")
+        
+        ///Configuraciones para almacenamiento posterior de las imagenes
+        if(option=="1" || option=="2") ///Caso de difuminado y escala de grises
         {
              newimg = fragmento.clone();
         }
-        else{
+        else ///Caso de Re-escalado
+        {
              newimg.create(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
         }
-         if(option=="1")
+         if(option=="1") ///Difuminado Gaussiano
         {
-            if(iteraciones_blur==0){
-                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols, procesadores);
+            if(iteraciones_blur==0)
+            {
+                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols, procesadores); ///Se estima la cantidad optima de iteraciones de difuminado
             }
-            Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
-              if(iteraciones_blur!=0)
-              {
-                   for(int i=0; i<iteraciones_blur; i++){Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);}
-              }
-            if(mi_rango == 0){
-                  join_luminosity_scale(newimg, imagen_original, 0, procesadores);
-                  for(int p = 1; p < procesadores; p++){
+            Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows); ///Se efectua el primer difuminado
+              
+            if(iteraciones_blur!=0) ///Encaso de que se considere necesario efectuar mas difuminados
+            {
+                for(int i=0; i<iteraciones_blur; i++){Gaussian_blur(newimg, newimg, fragmento.cols, fragmento.rows);} ///Se realiza ciclo FOR de difuminados
+            }
+            if(mi_rango == 0) ///Caso de ser el proceso principal (se repite en las demas opciones)
+            { 
+                  join_luminosity_scale(newimg, imagen_original, 0, procesadores); ///Se realiza union con imagen final
+                  for(int p = 1; p < procesadores; p++) ///Ciclo para unir todos los procesos
+                  {
                       Mat imgtmpjoin;
-                      recibir(imgtmpjoin, p);
-                      join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores);
-                      newimg=imagen_original.clone();
+                      recibir(imgtmpjoin, p); ///Se recibe imagen tratada
+                      join_gaussian_blur(imgtmpjoin, imagen_original, p, procesadores); ///Se realiza union de estas
+                      newimg=imagen_original.clone(); ///Se almacena la imagen resultante
                   }
               }
-              else{
-                  enviar(newimg, 0);
+              else ///Caso de no serlo (se repite en las demas opciones)
+              {
+                  enviar(newimg, 0); ///Se envia imagen tratada
               }
         }
-        if(option == "2")
+        if(option == "2") ///Caso de escala de grises
         {
-            Average(fragmento, newimg, fragmento.cols, fragmento.rows);
-            if(mi_rango == 0){
+            Average(fragmento, newimg, fragmento.cols, fragmento.rows); ///Se realiza transformacion de colores a escala de grises
+            if(mi_rango == 0) ///Caso de ser el proceso principal
+            {
                 join_luminosity_scale(newimg, imagen_original, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
+                for(int p = 1; p < procesadores; p++)
+                {
                     Mat imgtmpjoin;
                     recibir(imgtmpjoin, p);
                     join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
                      newimg=imagen_original.clone();
                 }
             }
-            else{
+            else ///Caso de no serlo
+            {
                 enviar(newimg, 0);
             }
         }
-        if(option == "3"){
-              Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
-              if(mi_rango == 0){
-                  Mat newimg2(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
-                  join_luminosity_scale(tmpnewimg, newimg2, 0, procesadores);
-                  for(int p = 1; p < procesadores; p++){
-                      Mat imgtmpjoin;
-                      recibir(imgtmpjoin, p);
-                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
-                      newimg=newimg2.clone();
-                  }
-              } else {
-                  enviar(tmpnewimg, 0);
-              }
-          }
-        if(option!="1" && option!="2" && option!="3"){
-            cout<<"La opcion ingresada no es valida..."<<endl;
-            return EXIT_FAILURE;
+        if(option == "3") ///Caso de re-escalado bilineal
+        {
+             Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0); ///Se realiza y almacena imagen re escalada
+             if(mi_rango == 0)///Caso de ser el proceso principal
+             {
+                 Mat newimg2(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                 join_luminosity_scale(tmpnewimg, newimg2, 0, procesadores);
+                 for(int p = 1; p < procesadores; p++)
+                 {
+                     Mat imgtmpjoin;
+                     recibir(imgtmpjoin, p);
+                     join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
+                     newimg=newimg2.clone();
+                 }
+             }
+             else ///Caso de no serlo
+             {
+                 enviar(tmpnewimg, 0);
+             }
         }
-        MPI_Finalize();
+        if(option!="1" && option!="2" && option!="3")
+        {
+            cout<<"La opcion ingresada no es valida; porfavor ingresar valores 1, 2 o 3"<<endl;
+            return EXIT_FAILURE; ///Salida en caso de EXCEPCION
+        }
+         
+        MPI_Finalize(); ///Finalizar MPI
     }
-    else{
-        cout<<"No se ingresaron lo argumentos <opcion> <filepath>..."<<endl;
-        return EXIT_FAILURE;
+     
+    else ///Caso en el que la cantidad de parametros sea menor o igual a 2
+    {
+        cout<<"No se ingresaron lo argumentos necesarios"<<endl;
+        return EXIT_FAILURE; ///Salida en caso de EXCEPCION
     }
-    time_t now=time(0);
-    struct tm tstruct;
-    char buf[80];
-    tstruct= *localtime(&now);
-    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct);
-    imwrite(option+"_"+string(buf)+".png", newimg);
-    return EXIT_SUCCESS;
+    
+    
+    time_t now=time(0); ///Se obtiene La hora actual
+    struct tm tstruct; ///Variable para lamacenar la fecha actual
+    char buf[80]; ///Variable para lamacenar la fecha actual
+    tstruct= *localtime(&now); ///Se obtiene tiempo actual
+    strftime(buf, sizeof(buf), "%Y%m%d%H%M%S", &tstruct); ///Se Registra fecha actual
+    imwrite(option+"_"+string(buf)+".png", newimg); ///Se almacena la imagen resultante
+    return EXIT_SUCCESS; ///Fin del programa
 }
