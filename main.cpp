@@ -482,7 +482,7 @@ int main(int argc, char** argv ){
                      recibir(imgtmpjoin, p);
                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
                      newimg=newimg2.clone();
-                     imwrite((char)p, newimg); ///Se almacena la imagen resultante
+                     imwrite("A", newimg); ///Se almacena la imagen resultante
                  }
              }
              else ///Caso de no serlo
