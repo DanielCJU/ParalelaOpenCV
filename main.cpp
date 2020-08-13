@@ -14,35 +14,61 @@
 using namespace cv;
 using namespace std;
 int rangeMin, rangeMax;
-/** Funciones **/
+/*------------------------------------------------------------ Funciones ------------------------------------------------------------*/
 
 /*
+ * N_iteraciones: Funcion que, en funcion de la cantidad total de pixeles, estima la cantidad de iteraciones de difuminado gausiano realizar.
+ * Parametros:
+     -filas: Cantidad de filas de la imagen
+     -columnas: Cantidad de columnas de la imagen
+     -procesadores: Cantidad total de procesadores
 */
-int N_iteraciones(int filas, int columnas)
+int N_iteraciones(int filas, int columnas, int procesadores)
 {
      int pixeles=filas*columnas;
-     if(pixeles<=163120/2)
+     if(pixeles<=(40780*2)/procesadores)
      {
-          return 2;
+         return 2;
      }
      else
      {
-          if(pixeles<=326240/2)
-          {
-               return 8;
-          }
-          else
-          {
-               if(pixeles<=1100710/2)
-               {
-                    return 14;
-               }
-               else
-               {
-                    return 20;
-               }
-          }
-     }
+         if(pixeles<=((81560*2)/procesadores))
+         {
+              return 5;
+         }
+         else
+         {
+             if(pixeles<=((122340*2)/procesadores))
+             {
+                 return 8;
+             }
+             else
+             {
+                 if(pixeles<=((163120*2)/procesadores))
+                 {
+                      return 10;
+                 }
+                 else
+                 {
+                     if(pixeles<=((356737.5*2)/procesadores))
+                     {
+                         return 14;
+                     }
+                     else
+                     {
+                         if(pixeles<=((550355*2)/procesadores))
+                         {
+                              return 18;
+                         }
+                         else
+                         {
+                             return ((22*2)/procesadores);
+                         }
+                    }
+                }
+            }
+        }
+    }
 }
 
 /*
@@ -52,33 +78,21 @@ int N_iteraciones(int filas, int columnas)
      -k0: valor del punto anterior al actual el K(n-1)
      -divi: Valor de la division por formula de k1 y k0 (buscar punto)
 */
-float linear_extrapolation(float k1, float k0, float divi){
+float linear_extrapolation(float k1, float k0, float divi)
+{
     return k1+(k0-k1)*divi;
 }
 
 /*
- * bi_linear_extrapolation: Funcion encargada de realizar extrapolacion bilinear, mediante 2 extrapolaciones lineales
- *Parametros:
-     -a: Punto x1
-     -b: Punto y1
-     -c: Punto x2
-     -d: Punto y2
-     -x: Valor division para Punto 1
-     -y: Valor division para Punto 2
-*/
-float bi_linear_extrapolation(float a, float b, float c, float d, float x, float y){
-    return linear_extrapolation(linear_extrapolation(a, b, x), linear_extrapolation(c, d, x), y);
-}
-
-/*
- * Generar_mascara: Funcion encargada de preparar los valores internos de la mascara a utilizar en el difuminado a utilizar.
-
+ * Generar_mascara: Funcion encargada de preparar los valores internos de la mascara a utilizar en el difuminado a utilizar gausiano (Gaussian_blur).
  * Parametros:
        -Base: Matriz bidimensional flotante la cual es utilizada como mascara para difuminado en otra funcion.
 */
 void Generar_mascara(float base[5][5]){
-    for(int i = 0; i<5; i++){
-        for(int j = 0; j<5; j++){
+    for(int i = 0; i<5; i++)
+    {
+        for(int j = 0; j<5; j++)
+        {
             float expo = exp(-1*((pow(i-2,2)+pow(j-2,2))/(2*pow(0.89,2))));
             base[i][j]=expo/(2*3.1416*pow(0.89,2));
         }
@@ -86,10 +100,19 @@ void Generar_mascara(float base[5][5]){
 }
 
 /*
+ * obtener_fragmento: Funcion encargada de generar fragmentos de una imagen; almacenando secciones de la imagen en funcion de los limites
+ * Parametros:
+       -imagen_original: Imagen original recibida, de esta se extraera el frgmento a almacenar.
+       -pedazo_recortado: Imagen que contendra el fragmento de la imagen.
+       -min_x y min_y: Limites inferiores del eje X y el eje _Y.
+       -max_x y max_y: Limites superiores del eje X y el eje _Y.
 */
-void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int min_y, int max_x, int max_y){
-    for(int x=0; x<max_x-min_x; x++){
-        for(int y=0; y<max_y-min_y; y++){
+void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int min_y, int max_x, int max_y)
+{
+    for(int x=0; x<max_x-min_x; x++)
+    {
+        for(int y=0; y<max_y-min_y; y++)
+        {
             pedazo_recortado.at<Vec3b>(y,x)[0]=imagen_original.at<Vec3b>(y,x+min_x)[0];
             pedazo_recortado.at<Vec3b>(y,x)[1]=imagen_original.at<Vec3b>(y,x+min_x)[1];
             pedazo_recortado.at<Vec3b>(y,x)[2]=imagen_original.at<Vec3b>(y,x+min_x)[2];
@@ -98,18 +121,29 @@ void obtener_fragmento(Mat imagen_original, Mat pedazo_recortado, int min_x, int
 }
 
 /*
+ * join_gaussian_blur: Funcion encargada de unir todos los fragmentos tratados con difuminado gaussiano en los diversos procesos
+ * Parametros:
+       -Original_image: Imagen modificada a añadir.
+       -new_image: Imagen donde almacenar todos los fragmentos ya procesados.
+       -proceso: Numero del procesador recibido.
+       -procesadores: Cantidad total de procesadores.
 */
-void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores){
+void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int procesadores)
+{
     int espaciado=(new_image.cols/procesadores)*proceso;
     int inicio=0, fin=0;
-    if(proceso!=0){
+    if(proceso!=0)
+    {
         inicio=2;
     }
-    if(proceso==procesadores-1){
+    if(proceso==procesadores-1)
+    {
         fin=-2;
     }
-    for(int x=0; x<Original_image.cols+fin; x++){
-        for(int y=0; y<Original_image.rows; y++){
+    for(int x=0; x<Original_image.cols+fin; x++)
+    {
+        for(int y=0; y<Original_image.rows; y++)
+        {
             new_image.at<Vec3b>(y,espaciado+x)[0]=Original_image.at<Vec3b>(y,x+inicio)[0];
             new_image.at<Vec3b>(y,espaciado+x)[1]=Original_image.at<Vec3b>(y,x+inicio)[1];
             new_image.at<Vec3b>(y,espaciado+x)[2]=Original_image.at<Vec3b>(y,x+inicio)[2];
@@ -120,11 +154,20 @@ void join_gaussian_blur(Mat Original_image, Mat new_image, int proceso, int proc
 
 
 /*
+ * join_luminosity_scale: Funcion encargada de unir todos los fragmentos tratados con el re-escalado, o escalado de grises en los diversos procesos
+ * Parametros:
+       -Original_image: Imagen modificada a añadir.
+       -new_image: Imagen donde almacenar todos los fragmentos ya procesados.
+       -proceso: Numero del procesador recibido.
+       -procesadores: Cantidad total de procesadores.
 */
-void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int procesadores){
+void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int procesadores)
+{
     int espaciado=(new_image.cols/procesadores)*proceso;
-    for(int x=0; x<Original_image.cols; x++){
-        for(int y=0; y<Original_image.rows; y++){
+    for(int x=0; x<Original_image.cols; x++)
+    {
+        for(int y=0; y<Original_image.rows; y++)
+        {
             new_image.at<Vec3b>(y,espaciado+x)[0]=Original_image.at<Vec3b>(y,x)[0];
             new_image.at<Vec3b>(y,espaciado+x)[1]=Original_image.at<Vec3b>(y,x)[1];
             new_image.at<Vec3b>(y,espaciado+x)[2]=Original_image.at<Vec3b>(y,x)[2];
@@ -133,8 +176,13 @@ void join_luminosity_scale(Mat Original_image, Mat new_image,int proceso, int pr
 }
 
 /*
+ * enviar: Funcion encargada de realizar el envio de los fragmentos y la comunicacion de envio
+ * Parametros:
+       -imagen: Imagen a enviar.
+       -destinatario: Numero del proceso enviante.
 */
-void enviar(Mat imagen, int destinatario){
+void enviar(Mat imagen, int destinatario)
+{
     size_t total, elemsize;
     int sizes[3];
     sizes[2] = imagen.elemSize();
@@ -146,8 +194,13 @@ void enviar(Mat imagen, int destinatario){
 }
 
 /*
+ * enviar: Funcion encargada de realizar el envio de los fragmentos y la comunicacion de envio
+ * Parametros:
+       -fragmento: Imagen a enviar.
+       -remitente: Numero del procesador recibido.
 */
-void recibir(Mat &fragmento,int remitente){
+void recibir(Mat &fragmento,int remitente)
+{
     MPI_Status estado;
     size_t total, elemsize;
     int sizes[3];
@@ -160,14 +213,14 @@ void recibir(Mat &fragmento,int remitente){
  * Gaussian_blur: Algoritmo para difuminar una imagen; se basa en el metodo de difuminado gausiano, el cual utiliza una mascara sobre
    el area a difuminar para asi reducir el error relativo en los pixeles (se reduce la prob. de pixeles mal difuminados y problemas
    de iluminacion en la imagen)
-
  * Parametros:
        -Original_image: Imagen original, la cual a de ser convertida a escala de grises
        -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
        -max_x: Cantidad total de columnas (casillas en el eje X)
        -max_y Cantidad total de filas (casilas en el eje Y)
 */
-void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
+void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y)
+{
     float mascara[5][5]; ///Mascara flotante a utilizar
     Generar_mascara(mascara);
     for(int x=0; x<max_x; x++)
@@ -212,16 +265,14 @@ void Gaussian_blur(Mat Original_image, Mat gray_image, int max_x, int max_y){
 }
 
 /*
- * Average: Algoritmo para convertir imagenes de color a grises; se basa en convertir el respectivo color (RGB) segun el espectro de vision humana.
-   Este se expresa con que: Rojo(R)*0.21 | Verde(G)*0.71 | Azul(B)*0.07
-
+ * Average: Algoritmo para convertir imagenes de color a grises; se basa en promediar los valores de los 3 canales (RGB) del respectivo pixeles
  * Parametros:
        -Original_image: Imagen original, la cual a de ser convertida a escala de grises
        -gray_image: Imagen en blanco, en donde se almacenara la imagen convertida en escala de grises
-       -max_x: Cantidad total de columnas (casillas en el eje X)
-       -max_y Cantidad total de filas (casilas en el eje Y)
+       -max_x y max_y: Cantidad total de columnas (X) y de filas (Y)
 */
-void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
+void Average(Mat Original_image, Mat gray_image, int max_x, int max_y)
+{
     float promedio;
     for(int x = 0; x < max_x; x++)
     {
@@ -235,39 +286,55 @@ void Average(Mat Original_image, Mat gray_image, int max_x, int max_y){
     }
 }
 
-
-void bi_lineal_scale(Mat imagen_original, Mat nueva_imagen, float aumento){
-    for(int x = 0; x < nueva_imagen.cols; x++){
-        for(int y = 0; y < nueva_imagen.rows; y++){
-            float gx = ((float)(x) / nueva_imagen.cols) * (imagen_original.cols - 1);
-            float gy = ((float)(y) / nueva_imagen.rows) * (imagen_original.rows - 1);
-
-            int gxi = (int) gx;
-            int gyi = (int) gy;
-            int red = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[0], imagen_original.at<Vec3b>(gyi + 1, gxi)[0], 
-                                              imagen_original.at<Vec3b>(gyi, gxi + 1)[0], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[0], 
-                                              gx - gxi, gy - gyi);
-            int green = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[1], imagen_original.at<Vec3b>(gyi + 1, gxi)[1], 
-                                                imagen_original.at<Vec3b>(gyi, gxi + 1)[1], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[1], 
-                                                gx - gxi, gy - gyi);
-            int blue = bi_linear_extrapolation(imagen_original.at<Vec3b>(gyi, gxi)[2], imagen_original.at<Vec3b>(gyi + 1, gxi)[2], 
-                                               imagen_original.at<Vec3b>(gyi, gxi + 1)[2], imagen_original.at<Vec3b>(gyi + 1, gxi + 1)[2], 
-                                               gx - gxi, gy - gyi);
-
-            nueva_imagen.at<Vec3b>(y, x)[0] = red;
-            nueva_imagen.at<Vec3b>(y, x)[1] = green;
-            nueva_imagen.at<Vec3b>(y, x)[2] = blue;
+/*
+ * bi_lineal_scale: Algoritmo para re escalado de imagenes; se basa en en aplicar una extrapolacion bilineal (osea, una extrapolacion lineal a otras 
+ 2 extrapolaciones lineales), para generar el pixel correspondiente a la ubicacion.
+ * Parametros:
+       -Original_image: Imagen original, la cual a de ser re escalada
+       -nueva_imagen: Imagen en blanco, en donde se almacenara la imagen escalada
+       -aumento: Valor por el cual la imagen sera re-escalada (x2)
+*/
+cv::Mat bi_lineal_scale(Mat imagen_original, float aumento){
+    int columnas_nueva_imagen = imagen_original.cols*aumento;
+    int filas_nueva_imagen = imagen_original.rows*aumento;
+    Mat nueva_imagen(filas_nueva_imagen, columnas_nueva_imagen, CV_8UC3);
+    float a1,a2;
+    for(int x = 0; x < columnas_nueva_imagen; x++){
+        for(int y = 0; y < filas_nueva_imagen; y++){
+            float float_x = ((float)(x) / columnas_nueva_imagen) * (imagen_original.cols - 1);
+            float float_y = ((float)(y) / filas_nueva_imagen) * (imagen_original.rows - 1);
+            int int_x = (int) float_x;
+            int int_y = (int) float_y;
+            float k1=float_x-int_x;
+            float k2=float_y-int_y;
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[0], imagen_original.at<Vec3b>(int_y+1, int_x)[0], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[0], imagen_original.at<Vec3b>(int_y+1, int_x+1)[0], k1);
+            int R=linear_extrapolation(a1, a2, k2);
+             
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[1], imagen_original.at<Vec3b>(int_y+1, int_x)[1], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[1], imagen_original.at<Vec3b>(int_y+1, int_x+1)[1], k1);
+            int G=linear_extrapolation(a1, a2, k2);
+             
+            a1=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x)[2], imagen_original.at<Vec3b>(int_y+1, int_x)[2], k1);
+            a2=linear_extrapolation(imagen_original.at<Vec3b>(int_y, int_x+1)[2], imagen_original.at<Vec3b>(int_y+1, int_x+1)[2], k1);
+            int B=linear_extrapolation(a1, a2, k2);
+             
+            nueva_imagen.at<Vec3b>(y, x)[0] = R;
+            nueva_imagen.at<Vec3b>(y, x)[1] = G;
+            nueva_imagen.at<Vec3b>(y, x)[2] = B;
         }
     }
+    return nueva_imagen;
 }
 
+/*------------------------------------------------------------   Main   ------------------------------------------------------------*/
 int main(int argc, char** argv ){
     string option(argv[1]);
-    Mat newimg;
+    Mat newimg, img;
     int iteraciones_blur=0;
     if(argc > 2){
         int mi_rango, procesadores;
-        Mat img, fragmento, imagen_original;
+        Mat fragmento, imagen_original;
 
         MPI_Init(&argc, &argv);
         MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
@@ -314,7 +381,7 @@ int main(int argc, char** argv ){
          if(option=="1")
         {
             if(iteraciones_blur==0){
-                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols);
+                iteraciones_blur=N_iteraciones(fragmento.rows, fragmento.cols, procesadores);
             }
             Gaussian_blur(fragmento, newimg, fragmento.cols, fragmento.rows);
               if(iteraciones_blur!=0)
@@ -351,22 +418,20 @@ int main(int argc, char** argv ){
             }
         }
         if(option == "3"){
-            Mat tmpnewimg(fragmento.rows*2, fragmento.cols*2, CV_8UC3);
-            bi_lineal_scale(fragmento, tmpnewimg, 2.0);
-            if(mi_rango == 0){
-                Mat img_escalada(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
-                join_luminosity_scale(tmpnewimg, img_escalada, 0, procesadores);
-                for(int p = 1; p < procesadores; p++){
-                    Mat imgtmpjoin;
-                    recibir(imgtmpjoin, p);
-                    join_luminosity_scale(imgtmpjoin, imagen_original, p, procesadores);
-                    newimg=imagen_original.clone();
-                }
-            }
-            else{
-                enviar(tmpnewimg, 0);
-            }
-        }
+              Mat tmpnewimg = bi_lineal_scale(fragmento, 2.0);
+              if(mi_rango == 0){
+                  Mat newimg2(imagen_original.rows*2, imagen_original.cols*2, CV_8UC3);
+                  join_luminosity_scale(tmpnewimg, newimg2, 0, procesadores);
+                  for(int p = 1; p < procesadores; p++){
+                      Mat imgtmpjoin;
+                      recibir(imgtmpjoin, p);
+                      join_luminosity_scale(imgtmpjoin, newimg2, p, procesadores);
+                      newimg=newimg2.clone();
+                  }
+              } else {
+                  enviar(tmpnewimg, 0);
+              }
+          }
         if(option!="1" && option!="2" && option!="3"){
             cout<<"La opcion ingresada no es valida..."<<endl;
             return EXIT_FAILURE;
